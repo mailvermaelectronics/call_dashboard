@@ -7,9 +7,8 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-/* RESET & BODY */
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:Inter,sans-serif;background:#f4f4f8;transition:0.3s;overflow-x:hidden;}
+body{font-family:Inter,sans-serif;background:#f4f4f8;transition:0.3s;}
 body.dark{background:#111;color:#fff;}
 
 /* SIDEBAR */
@@ -19,8 +18,9 @@ body.dark{background:#111;color:#fff;}
     background:#fff;
     position:fixed;
     top:0; left:0;
-    box-shadow:4px 0 20px rgba(0,0,0,0.08);
     padding:25px;
+    box-shadow:4px 0 20px rgba(0,0,0,0.08);
+    overflow:auto;
     transition:0.3s;
     z-index:1000;
 }
@@ -32,28 +32,14 @@ body.dark .menu-item:hover{background:#222;}
 .menu-item.active{background:#2196F3;color:white;}
 body.dark .menu-item.active{background:#2196F3;color:white;}
 
-/* SIDEBAR TOGGLE BUTTON FOR MOBILE */
-#menuToggle{
-    display:none;
-    position:fixed;
-    top:15px;
-    left:15px;
-    background:#2196F3;
-    color:white;
-    border:none;
-    padding:10px;
-    border-radius:8px;
-    z-index:1100;
-}
+/* MOBILE SIDEBAR */
 @media(max-width:768px){
-    #sidebar{position:fixed;left:-300px;top:0;height:100vh;}
-    #sidebar.show{left:0;}
-    #main{margin-left:0;padding:20px;}
-    #menuToggle{display:block;}
+    #sidebar{position:relative;width:100%;height:auto;box-shadow:none;}
+    #main{margin-left:0;padding:15px;}
+} 
+@media(min-width:769px){
+    #main{margin-left:280px;padding:20px;}
 }
-
-/* MAIN PANEL */
-#main{margin-left:280px;padding:20px;transition:0.3s;}
 
 /* TOPBAR */
 #topbar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;margin-bottom:20px;gap:10px;}
@@ -102,9 +88,6 @@ canvas{max-width:100% !important;height:auto !important;}
 </style>
 </head>
 <body>
-
-<!-- MENU TOGGLE BUTTON FOR MOBILE -->
-<button id="menuToggle"><i class="fa fa-bars"></i></button>
 
 <!-- SIDEBAR -->
 <div id="sidebar">
@@ -163,53 +146,57 @@ canvas{max-width:100% !important;height:auto !important;}
 </div>
 
 <script>
-// ===== LOGIN =====
-if(localStorage.getItem("auth") !== "1"){ window.location.href="index.html"; }
+// LOGIN PROTECTION
+if(localStorage.getItem("auth")!=="1"){ window.location.href="index.html"; }
 
-// ===== MENU TOGGLE FOR MOBILE =====
-const menuToggle = document.getElementById("menuToggle");
-const sidebar = document.getElementById("sidebar");
-menuToggle.onclick = ()=> sidebar.classList.toggle("show");
-
-// ===== MENU ITEM CLICK =====
+// MENU ITEM CLICK
 document.querySelectorAll(".menu-item").forEach(item=>{
-    item.onclick = ()=>{
+    item.onclick=()=>{
         document.querySelectorAll(".menu-item").forEach(i=>i.classList.remove("active"));
         item.classList.add("active");
-        alert(`You clicked ${item.dataset.section}`); // Replace with real section navigation
-    }
+        // Currently we do not hide content, mobile view same as desktop
+    };
 });
 
-// ===== DATA =====
-let allData = [];
-let chart, monthlyChart;
+// DARK MODE
+document.getElementById("modeBtn").onclick=()=>{
+    document.body.classList.toggle("dark");
+    document.getElementById("modeBtn").innerText = document.body.classList.contains("dark")?"Light Mode":"Dark Mode";
+};
+
+// LOGOUT
+document.getElementById("logoutBtn").onclick=()=>{
+    localStorage.removeItem("auth");
+    window.location.href="index.html";
+};
+
+// DATA
+let allData=[], chart, monthlyChart;
 async function loadData(){
     try{
-        let res = await fetch("data.json?cache="+Math.random());
-        allData = await res.json();
+        let res=await fetch("data.json?cache="+Math.random());
+        allData=await res.json();
         updateTable(allData);
         updateStats(allData);
         updateChart(allData);
         updateMonthlyChart(allData);
-    }catch(e){ console.error("Failed to load data", e); }
+    }catch(e){ console.error(e); }
 }
 loadData();
-setInterval(loadData, 8000);
+setInterval(loadData,8000);
 
-// ===== STATS =====
 function updateStats(d){
-    document.getElementById("totalCalls").innerText = d.length;
-    document.getElementById("missedCalls").innerText = d.filter(x=>x.type==="missed").length;
-    let today = new Date().toISOString().slice(0,10);
-    document.getElementById("todayCalls").innerText = d.filter(x=>x.date.includes(today)).length;
+    document.getElementById("totalCalls").innerText=d.length;
+    document.getElementById("missedCalls").innerText=d.filter(x=>x.type==="missed").length;
+    let today=new Date().toISOString().slice(0,10);
+    document.getElementById("todayCalls").innerText=d.filter(x=>x.date.includes(today)).length;
 }
 
-// ===== TABLE =====
 function updateTable(data){
-    let tb = document.getElementById("tbody");
-    tb.innerHTML = "";
+    let tb=document.getElementById("tbody");
+    tb.innerHTML="";
     data.slice().reverse().forEach(c=>{
-        tb.innerHTML += `<tr>
+        tb.innerHTML+=`<tr>
             <td>${c.number}</td>
             <td>${c.name}</td>
             <td>${c.type}</td>
@@ -219,72 +206,49 @@ function updateTable(data){
     });
 }
 
-// ===== SEARCH =====
-search.onkeyup = ()=>{
-    let q = search.value.toLowerCase();
-    let f = allData.filter(x => x.number.toLowerCase().includes(q) || x.name.toLowerCase().includes(q));
+document.getElementById("search").onkeyup=()=>{
+    let q=document.getElementById("search").value.toLowerCase();
+    let f=allData.filter(x=>x.number.toLowerCase().includes(q)||x.name.toLowerCase().includes(q));
     updateTable(f); updateChart(f); updateMonthlyChart(f);
 };
 
-// ===== FILTERS =====
 document.querySelectorAll(".filterBtn").forEach(btn=>{
-    btn.onclick = ()=>{
+    btn.onclick=()=>{
         document.querySelectorAll(".filterBtn").forEach(b=>b.classList.remove("active"));
         btn.classList.add("active");
-        let t = btn.dataset.type;
-        let f = t==="all"?allData:allData.filter(x=>x.type===t);
+        let t=btn.dataset.type;
+        let f=t==="all"?allData:allData.filter(x=>x.type===t);
         updateTable(f); updateChart(f); updateMonthlyChart(f);
     };
 });
 
-// ===== DOUGHNUT CHART =====
+// CHARTS
 function updateChart(data){
-    let incoming = data.filter(x=>x.type==="incoming").length;
-    let outgoing = data.filter(x=>x.type==="outgoing").length;
-    let missed = data.filter(x=>x.type==="missed").length;
-
+    let incoming=data.filter(x=>x.type==="incoming").length;
+    let outgoing=data.filter(x=>x.type==="outgoing").length;
+    let missed=data.filter(x=>x.type==="missed").length;
     if(chart) chart.destroy();
-    chart = new Chart(document.getElementById('chart'),{
-        type:'doughnut',
-        data:{
-            labels:["Incoming","Outgoing","Missed"],
-            datasets:[{ data:[incoming,outgoing,missed], backgroundColor:["#4CAF50","#2196F3","#e63946"] }]
-        },
-        options:{ responsive:true, plugins:{ legend:{position:'bottom'} } }
+    chart=new Chart(document.getElementById("chart"),{
+        type:"doughnut",
+        data:{labels:["Incoming","Outgoing","Missed"],datasets:[{data:[incoming,outgoing,missed],backgroundColor:["#4CAF50","#2196F3","#e63946"]}]},
+        options:{responsive:true,plugins:{legend:{position:"bottom"}}}
     });
 }
 
-// ===== MONTHLY BAR CHART =====
 function updateMonthlyChart(data){
-    let months = {};
-    data.forEach(x=>{
-        let m = x.date.slice(0,7);
-        months[m] = (months[m]||0)+1;
-    });
-    let labels = Object.keys(months).sort();
-    let values = labels.map(k=>months[k]);
+    let months={};
+    data.forEach(x=>{let m=x.date.slice(0,7); months[m]=(months[m]||0)+1;});
+    let labels=Object.keys(months).sort();
+    let values=labels.map(k=>months[k]);
     if(monthlyChart) monthlyChart.destroy();
-    monthlyChart = new Chart(document.getElementById('monthChart'),{
-        type:'bar',
-        data:{ labels, datasets:[{ label:'Monthly Calls', data:values, backgroundColor:'#2196F3' }] },
-        options:{ responsive:true, plugins:{legend:{display:false}} }
+    monthlyChart=new Chart(document.getElementById("monthChart"),{
+        type:"bar",
+        data:{labels,datasets:[{label:"Monthly Calls",data:values,backgroundColor:"#2196F3"}]},
+        options:{responsive:true,plugins:{legend:{display:false}}}
     });
 }
 
-// ===== DARK MODE =====
-const modeBtn = document.getElementById("modeBtn");
-modeBtn.onclick = ()=>{
-    document.body.classList.toggle("dark");
-    modeBtn.innerText = document.body.classList.contains("dark")?"Light Mode":"Dark Mode";
-};
-
-// ===== LOGOUT =====
-document.getElementById("logoutBtn").onclick = ()=>{
-    localStorage.removeItem("auth");
-    window.location.href="index.html";
-};
-
-// ===== LIVE WEBHOOK =====
+// LIVE WEBHOOK
 async function pushWebhook(data){
     allData.push(data);
     updateTable(allData);
@@ -293,12 +257,9 @@ async function pushWebhook(data){
     updateMonthlyChart(allData);
 }
 try{
-    const stream = new EventSource("https://your-proxy-endpoint/webhook");
-    stream.onmessage = e=>{
-        let payload = JSON.parse(e.data);
-        pushWebhook(payload);
-    };
-}catch(err){ console.log("Webhook stream unavailable", err); }
+    const stream=new EventSource("https://your-proxy-endpoint/webhook");
+    stream.onmessage=e=>pushWebhook(JSON.parse(e.data));
+}catch(err){console.log("Webhook unavailable",err);}
 </script>
 </body>
 </html>
