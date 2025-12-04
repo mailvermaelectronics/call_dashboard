@@ -29,19 +29,21 @@
     transition:transform 0.3s ease;
   }
 
-  /* Logo Styling (Fixed for Transparent PNG) */
+  /* Logo Styling (Final Fix for Transparent PNG) */
   .logo-container {
     text-align: center;
     margin-bottom: 25px;
-    /* Ensuring the container has a solid white background just in case */
-    background-color: #ffffff; 
+    background-color: #ffffff; /* Container background ensures white base */
+    line-height: 0; /* Prevents extra space/line-height from affecting PNG */
+    padding: 5px 0; /* Optional: slight vertical padding for spacing */
   }
   .logo {
     /* Logo image styling */
     width: auto; 
     max-height: 80px; 
-    /* This style helps in cases where the image might not sit perfectly */
     display: inline-block;
+    /* FIX: This property helps ensure correct rendering of transparency */
+    background-color: transparent; 
   }
 
   /* Headings */
