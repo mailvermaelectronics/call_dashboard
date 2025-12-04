@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<title>Call Dashboard Pro+</title>
+<style>
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto;
+        background: #f8f8f8;
+        margin: 0;
+        padding: 20px;
+        transition: 0.3s;
+    }
+    .dark {
+        background:#121212;
+        color:white;
+    }
+    h1 {
+        text-align:center;
+        margin-bottom:20px;
+        font-weight:700;
+    }
+    #topbar {
+        display:flex;
+        justify-content:space-between;
+        margin-bottom:20px;
+    }
+    #search {
+        padding:10px;
+        width:200px;
+        border-radius:10px;
+        border:1px solid #ccc;
+    }
+    #modeBtn {
+        padding:10px 20px;
+        border:none;
+        background:black;
+        color:white;
+        border-radius:10px;
+        cursor:pointer;
+        font-weight:600;
+    }
+    .dark #modeBtn {
+        background:white;
+        color:black;
+    }
+    #filterBar {
+        display:flex;
+        justify-content:center;
+        gap:10px;
+        margin-bottom:20px;
+    }
+    .filterBtn {
+        padding:10px 14px;
+        border-radius:10px;
+        border:1px solid #ccc;
+        cursor:pointer;
+        background:white;
+    }
+    .dark .filterBtn { background:#1f1f1f; color:white; border-color:#444; }
+    .active {
+        background:black !important;
+        color:white !important;
+        border-color:black !important;
+    }
+    table {
+        width:100%;
+        border-collapse:collapse;
+        background:white;
+        border-radius:14px;
+        overflow:hidden;
+        box-shadow:0 5px 18px rgba(0,0,0,0.1);
+    }
+    .dark table { background:#1a1a1a; }
+    th, td {
+        padding:12px;
+        text-align:center;
+        border-bottom:1px solid #eee;
+    }
+    .dark td, .dark th { border-color:#333; }
+    th { background:#fafafa; }
+    .dark th { background:#222; }
+    #chartContainer {
+        margin-top:30px;
+        padding:20px;
+        background:white;
+        border-radius:18px;
+        box-shadow:0 5px 25px rgba(0,0,0,0.1);
+    }
+    .dark #chartContainer { background:#1a1a1a; }
+    #downloadBtn {
+        margin-top:20px;
+        padding:10px 20px;
+        border:none;
+        background:green;
+        color:white;
+        border-radius:12px;
+        font-weight:600;
+        cursor:pointer;
+    }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<h1>📞 Call Dashboard Pro+</h1>
+
+<div id="topbar">
+    <input id="search" placeholder="Search number or name..." />
+    <button id="modeBtn">Dark Mode</button>
+</div>
+
+<div id="filterBar">
+    <button class="filterBtn active" data-type="all">All</button>
+    <button class="filterBtn" data-type="incoming">Incoming</button>
+    <button class="filterBtn" data-type="outgoing">Outgoing</button>
+    <button class="filterBtn" data-type="missed">Missed</button>
+</div>
+
+<table>
+    <thead>
+    <tr>
+        <th>Number</th>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Duration</th>
+        <th>Date</th>
+    </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+</table>
+
+<div id="chartContainer">
+    <canvas id="chart"></canvas>
+</div>
+
+<button id="downloadBtn">Download CSV</button>
+
+<script>
+let allData = [];
+let chart;
+
+async function loadData() {
+    let res = await fetch("data.json?cache=" + Math.random());
+    allData = await res.json();
+    updateTable(allData);
+    updateChart(allData);
+}
+loadData();
+setInterval(loadData, 10000);
+
+function updateTable(data) {
+    let tb = document.getElementById("tbody");
+    tb.innerHTML = "";
+    data.slice().reverse().forEach(c => {
+        tb.innerHTML += `
+        <tr>
+            <td>${c.number}</td>
+            <td>${c.name}</td>
+            <td>${c.type}</td>
+            <td>${c.duration}</td>
+            <td>${c.date}</td>
+        </tr>`;
+    });
+}
+
+document.getElementById("search").onkeyup = function () {
+    let q = this.value.toLowerCase();
+    let f = allData.filter(x => 
+        x.number.toLowerCase().includes(q) ||
+        x.name.toLowerCase().includes(q)
+    );
+    updateTable(f);
+    updateChart(f);
+};
+
+document.querySelectorAll(".filterBtn").forEach(btn => {
+    btn.onclick = () => {
+        document.querySelectorAll(".filterBtn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+
+        let t = btn.dataset.type;
+        if (t === "all") return updateTable(allData), updateChart(allData);
+
+        let f = allData.filter(x => x.type === t);
+        updateTable(f);
+        updateChart(f);
+    };
+});
+
+function updateChart(data) {
+    let incoming = data.filter(x => x.type==="incoming").length;
+    let outgoing = data.filter(x => x.type==="outgoing").length;
+    let missed = data.filter(x => x.type==="missed").length;
+
+    if (chart) chart.destroy();
+
+    chart = new Chart(document.getElementById("chart"), {
+        type: "pie",
+        data: {
+            labels:["Incoming","Outgoing","Missed"],
+            datasets:[{
+                data:[incoming, outgoing, missed],
+                backgroundColor:["#4CAF50","#2196F3","#F44336"]
+            }]
+        }
+    });
+}
+
+document.getElementById("downloadBtn").onclick = () => {
+    let csv = "Number,Name,Type,Duration,Date\n";
+    allData.forEach(c => {
+        csv += `${c.number},${c.name},${c.type},${c.duration},${c.date}\n`;
+    });
+
+    let blob = new Blob([csv], { type: "text/csv" });
+    let url = URL.createObjectURL(blob);
+
+    let a = document.createElement("a");
+    a.href = url;
+    a.download = "call_log.csv";
+    a.click();
+};
+
+document.getElementById("modeBtn").onclick = () => {
+    document.body.classList.toggle("dark");
+};
+</script>
+
+</body>
+</html>
