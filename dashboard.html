@@ -44,10 +44,12 @@ body.dark .menu-item.active{background:#2196F3;color:white;}
 /* TOPBAR */
 #topbar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;margin-bottom:20px;gap:10px;}
 #search{padding:10px 14px;width:250px;border-radius:8px;border:1px solid #ccc;}
-#modeBtn,#logoutBtn{padding:10px 16px;border:none;border-radius:8px;cursor:pointer;font-weight:600;}
+#modeBtn,#logoutBtn,#refreshBtn{padding:10px 16px;border:none;border-radius:8px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:5px;} /* Added #refreshBtn style */
 #modeBtn{background:black;color:white;}
 body.dark #modeBtn{background:white;color:black;}
 #logoutBtn{background:#e63946;color:white;margin-left:10px;}
+#refreshBtn{background:#ff9800;color:white;margin-right:10px;} /* Refresh button style */
+
 
 /* CARDS */
 #cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:15px;margin-bottom:20px;}
@@ -89,7 +91,6 @@ canvas{max-width:100% !important;height:auto !important;}
 </head>
 <body>
 
-<!-- SIDEBAR -->
 <div id="sidebar">
     <h2>📞 Dashboard Pro+</h2>
     <div class="menu-item active" data-section="dashboard"><i class="fa fa-chart-line"></i> Dashboard</div>
@@ -98,12 +99,11 @@ canvas{max-width:100% !important;height:auto !important;}
     <div class="menu-item" data-section="settings"><i class="fa fa-gear"></i> Settings</div>
 </div>
 
-<!-- MAIN PANEL -->
 <div id="main">
     <div id="topbar">
         <input id="search" placeholder="Search number or name...">
         <div>
-            <button id="modeBtn">Dark Mode</button>
+            <button id="refreshBtn"><i class="fa fa-sync-alt"></i> Refresh</button> <button id="modeBtn">Dark Mode</button>
             <button id="logoutBtn">Logout</button>
         </div>
     </div>
@@ -170,9 +170,17 @@ document.getElementById("logoutBtn").onclick=()=>{
     window.location.href="index.html";
 };
 
+// REFRESH BUTTON LOGIC (NEW)
+document.getElementById("refreshBtn").onclick=()=>{
+    loadData();
+};
+
 // DATA
 let allData=[], chart, monthlyChart;
 async function loadData(){
+    // Temporarily disable the button and show loading state if desired
+    // document.getElementById("refreshBtn").disabled = true;
+    
     try{
         let res=await fetch("data.json?cache="+Math.random());
         allData=await res.json();
@@ -180,7 +188,12 @@ async function loadData(){
         updateStats(allData);
         updateChart(allData);
         updateMonthlyChart(allData);
-    }catch(e){ console.error(e); }
+    }catch(e){ 
+        console.error(e); 
+    }
+    // finally {
+    //     document.getElementById("refreshBtn").disabled = false;
+    // }
 }
 loadData();
 setInterval(loadData,8000);
