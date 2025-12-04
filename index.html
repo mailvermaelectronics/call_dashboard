@@ -29,15 +29,19 @@
     transition:transform 0.3s ease;
   }
 
-  /* Logo Styling (Updated for PNG/Image) */
+  /* Logo Styling (Fixed for Transparent PNG) */
   .logo-container {
     text-align: center;
     margin-bottom: 25px;
+    /* Ensuring the container has a solid white background just in case */
+    background-color: #ffffff; 
   }
   .logo {
     /* Logo image styling */
-    width: auto; /* Adjust width as needed, maintaining aspect ratio */
-    max-height: 80px; /* Set a max height */
+    width: auto; 
+    max-height: 80px; 
+    /* This style helps in cases where the image might not sit perfectly */
+    display: inline-block;
   }
 
   /* Headings */
