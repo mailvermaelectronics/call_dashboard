@@ -1,0 +1,13 @@
+name: Update Call Data
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  updated:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Update Successful
+        run: echo "Call data updated!"
