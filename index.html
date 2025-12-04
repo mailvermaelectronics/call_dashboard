@@ -33,14 +33,16 @@
   .logo-container {
     text-align: center;
     margin-bottom: 25px;
-    background-color: #ffffff;
+    background-color: #ffffff; 
   }
   .logo {
+    /* Logo image styling */
     width: auto; 
     max-height: 80px; 
     display: inline-block;
+    /* FIX: Force transparent background on the image element itself */
     background-color: transparent !important; 
-    border: none !important;
+    border: none !important; 
   }
 
   /* Headings */
@@ -106,15 +108,6 @@
   }
 </style>
 
-<script>
-/* -----------------------------------------
-   SECURITY FIX – Dashboard is locked
------------------------------------------- */
-if (localStorage.getItem("auth") === "1") {
-  window.location.href = "dashboard.html";
-}
-</script>
-
 </head>
 <body>
 <div class="box">
@@ -166,6 +159,7 @@ async function login(){
   const u = document.getElementById("username").value.trim();
   const p = document.getElementById("password").value;
 
+  // Disable button during process
   const loginButton = document.querySelector('button');
   loginButton.disabled = true;
 
@@ -190,14 +184,17 @@ async function login(){
       return;
     }
   } catch (error) {
+    // Handle potential hashing errors
     msg("An error occurred during authentication.", true);
     loginButton.disabled = false;
     return;
   }
 
+  // SUCCESS
   msg("Login successful! Redirecting to dashboard...", false);
 
-  localStorage.setItem("auth", "1");
+  // FIX: Using sessionStorage instead of localStorage
+  sessionStorage.setItem("auth", "1");
 
   setTimeout(()=>{
     window.location.href = "dashboard.html";
