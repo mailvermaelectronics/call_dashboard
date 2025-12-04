@@ -1,231 +1,171 @@
+<script>
+if(localStorage.getItem("auth") !== "1"){
+    window.location.href = "login.html";
+}
+</script>
+
+
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8" />
-<title>Call Dashboard Pro+</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Secure Login - Call Dashboard</title>
 <style>
-    body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto;
-        background: #f8f8f8;
-        margin: 0;
-        padding: 20px;
-        transition: 0.3s;
-    }
-    .dark {
-        background:#121212;
-        color:white;
-    }
-    h1 {
-        text-align:center;
-        margin-bottom:20px;
-        font-weight:700;
-    }
-    #topbar {
-        display:flex;
-        justify-content:space-between;
-        margin-bottom:20px;
-    }
-    #search {
-        padding:10px;
-        width:200px;
-        border-radius:10px;
-        border:1px solid #ccc;
-    }
-    #modeBtn {
-        padding:10px 20px;
-        border:none;
-        background:black;
-        color:white;
-        border-radius:10px;
-        cursor:pointer;
-        font-weight:600;
-    }
-    .dark #modeBtn {
-        background:white;
-        color:black;
-    }
-    #filterBar {
-        display:flex;
-        justify-content:center;
-        gap:10px;
-        margin-bottom:20px;
-    }
-    .filterBtn {
-        padding:10px 14px;
-        border-radius:10px;
-        border:1px solid #ccc;
-        cursor:pointer;
-        background:white;
-    }
-    .dark .filterBtn { background:#1f1f1f; color:white; border-color:#444; }
-    .active {
-        background:black !important;
-        color:white !important;
-        border-color:black !important;
-    }
-    table {
-        width:100%;
-        border-collapse:collapse;
-        background:white;
-        border-radius:14px;
-        overflow:hidden;
-        box-shadow:0 5px 18px rgba(0,0,0,0.1);
-    }
-    .dark table { background:#1a1a1a; }
-    th, td {
-        padding:12px;
-        text-align:center;
-        border-bottom:1px solid #eee;
-    }
-    .dark td, .dark th { border-color:#333; }
-    th { background:#fafafa; }
-    .dark th { background:#222; }
-    #chartContainer {
-        margin-top:30px;
-        padding:20px;
-        background:white;
-        border-radius:18px;
-        box-shadow:0 5px 25px rgba(0,0,0,0.1);
-    }
-    .dark #chartContainer { background:#1a1a1a; }
-    #downloadBtn {
-        margin-top:20px;
-        padding:10px 20px;
-        border:none;
-        background:green;
-        color:white;
-        border-radius:12px;
-        font-weight:600;
-        cursor:pointer;
-    }
+  body{font-family:Inter,system-ui; background:#f4f6fa; display:flex; align-items:center; justify-content:center; height:100vh;}
+  .box{background:#fff; padding:25px; width:350px; border-radius:12px; box-shadow:0 6px 25px rgba(0,0,0,0.1);}
+  input{width:100%; padding:10px; margin-top:10px; border-radius:8px; border:1px solid #d1d5db;}
+  button{width:100%; padding:12px; margin-top:12px; border:0; border-radius:8px;
+    background:#2563eb; color:#fff; font-weight:600; cursor:pointer;}
+  .linkbtn{background:none !important; color:#2563eb; cursor:pointer;}
+  .muted{font-size:13px; color:#6b7280; margin-top:5px;}
+  #msg{margin-top:10px; font-size:14px;}
 </style>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
-<h1>📞 Call Dashboard Pro+</h1>
+<div class="box">
 
-<div id="topbar">
-    <input id="search" placeholder="Search number or name..." />
-    <button id="modeBtn">Dark Mode</button>
+  <h2>Login</h2>
+
+  <!-- STEP 1: username + password -->
+  <div id="step1">
+    <input id="username" placeholder="Username">
+    <input id="password" type="password" placeholder="Password">
+    <button onclick="submitCredentials()">Send OTP</button>
+    <div class="muted">Correct username & password enter kare → OTP email pe aayega</div>
+  </div>
+
+  <!-- STEP 2: OTP -->
+  <div id="step2" style="display:none;">
+    <div class="muted">OTP sent to <span id="showEmail">your email</span></div>
+    <input id="otp" maxlength="6" placeholder="Enter 6-digit OTP">
+    <button onclick="verifyOTP()">Verify OTP</button>
+    <button class="linkbtn" id="resendBtn" onclick="resendOTP()">Resend OTP</button>
+    <div class="muted" id="timer"></div>
+  </div>
+
+  <div id="msg"></div>
 </div>
 
-<div id="filterBar">
-    <button class="filterBtn active" data-type="all">All</button>
-    <button class="filterBtn" data-type="incoming">Incoming</button>
-    <button class="filterBtn" data-type="outgoing">Outgoing</button>
-    <button class="filterBtn" data-type="missed">Missed</button>
-</div>
-
-<table>
-    <thead>
-    <tr>
-        <th>Number</th>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Duration</th>
-        <th>Date</th>
-    </tr>
-    </thead>
-    <tbody id="tbody"></tbody>
-</table>
-
-<div id="chartContainer">
-    <canvas id="chart"></canvas>
-</div>
-
-<button id="downloadBtn">Download CSV</button>
-
+<!-- EmailJS -->
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@2/dist/email.min.js"></script>
 <script>
-let allData = [];
-let chart;
+/* ================================
+      REPLACE THESE 3 VALUES
+================================ */
+const SERVICE_ID = "SERVICE_ID_HERE";
+const TEMPLATE_ID = "TEMPLATE_ID_HERE";
+const PUBLIC_KEY  = "PUBLIC_KEY_HERE";
+/* ================================ */
 
-async function loadData() {
-    let res = await fetch("data.json?cache=" + Math.random());
-    allData = await res.json();
-    updateTable(allData);
-    updateChart(allData);
-}
-loadData();
-setInterval(loadData, 10000);
+// EMAILJS init
+emailjs.init(PUBLIC_KEY);
 
-function updateTable(data) {
-    let tb = document.getElementById("tbody");
-    tb.innerHTML = "";
-    data.slice().reverse().forEach(c => {
-        tb.innerHTML += `
-        <tr>
-            <td>${c.number}</td>
-            <td>${c.name}</td>
-            <td>${c.type}</td>
-            <td>${c.duration}</td>
-            <td>${c.date}</td>
-        </tr>`;
-    });
-}
-
-document.getElementById("search").onkeyup = function () {
-    let q = this.value.toLowerCase();
-    let f = allData.filter(x => 
-        x.number.toLowerCase().includes(q) ||
-        x.name.toLowerCase().includes(q)
-    );
-    updateTable(f);
-    updateChart(f);
+// USER DATA (given by you)
+const USERS = {
+  "admin": {
+     // password = admin123
+     passwordHash: "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9",
+     email: "youremail@example.com"
+  }
 };
 
-document.querySelectorAll(".filterBtn").forEach(btn => {
-    btn.onclick = () => {
-        document.querySelectorAll(".filterBtn").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
+let CURRENT_USER = null;
+let OTP = null;
+let OTP_EXP = null;
 
-        let t = btn.dataset.type;
-        if (t === "all") return updateTable(allData), updateChart(allData);
-
-        let f = allData.filter(x => x.type === t);
-        updateTable(f);
-        updateChart(f);
-    };
-});
-
-function updateChart(data) {
-    let incoming = data.filter(x => x.type==="incoming").length;
-    let outgoing = data.filter(x => x.type==="outgoing").length;
-    let missed = data.filter(x => x.type==="missed").length;
-
-    if (chart) chart.destroy();
-
-    chart = new Chart(document.getElementById("chart"), {
-        type: "pie",
-        data: {
-            labels:["Incoming","Outgoing","Missed"],
-            datasets:[{
-                data:[incoming, outgoing, missed],
-                backgroundColor:["#4CAF50","#2196F3","#F44336"]
-            }]
-        }
-    });
+// SHA-256 hashing
+async function sha256hex(str){
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
 }
 
-document.getElementById("downloadBtn").onclick = () => {
-    let csv = "Number,Name,Type,Duration,Date\n";
-    allData.forEach(c => {
-        csv += `${c.number},${c.name},${c.type},${c.duration},${c.date}\n`;
-    });
+// Show message
+function msg(text, bad=false){
+  const m = document.getElementById("msg");
+  m.style.color = bad ? "#dc2626" : "#059669";
+  m.innerText = text;
+}
 
-    let blob = new Blob([csv], { type: "text/csv" });
-    let url = URL.createObjectURL(blob);
+/* ================================
+      STEP 1 — PASSWORD VERIFY
+================================ */
+async function submitCredentials(){
+  msg("");
 
-    let a = document.createElement("a");
-    a.href = url;
-    a.download = "call_log.csv";
-    a.click();
-};
+  const u = document.getElementById("username").value.trim();
+  const p = document.getElementById("password").value;
 
-document.getElementById("modeBtn").onclick = () => {
-    document.body.classList.toggle("dark");
-};
+  if(!u || !p){ msg("Enter username & password", true); return; }
+
+  const user = USERS[u];
+  if(!user){ msg("Invalid credentials", true); return; }
+
+  const hash = await sha256hex(p);
+  if(hash !== user.passwordHash){ msg("Invalid credentials", true); return; }
+
+  CURRENT_USER = user;
+  sendOTP();
+}
+
+/* ================================
+      SEND OTP FUNCTION
+================================ */
+function sendOTP(){
+  OTP = String(Math.floor(100000 + Math.random()*900000));
+  OTP_EXP = Date.now() + 5*60*1000;
+
+  emailjs.send(SERVICE_ID, TEMPLATE_ID, { 
+     otp: OTP, 
+     to_email: CURRENT_USER.email 
+  }).then(()=>{
+     document.getElementById("step1").style.display = "none";
+     document.getElementById("step2").style.display = "block";
+     document.getElementById("showEmail").innerText = CURRENT_USER.email;
+     startTimer();
+     msg("OTP sent to your email");
+  }).catch(()=>{
+     msg("Failed to send OTP. Check EmailJS settings.", true);
+  });
+}
+
+/* ================================
+      VERIFY OTP
+================================ */
+function verifyOTP(){
+  const entered = document.getElementById("otp").value;
+
+  if(Date.now() > OTP_EXP) return msg("OTP expired", true);
+  if(entered !== OTP) return msg("Incorrect OTP", true);
+
+  // login success
+  localStorage.setItem("auth", "1");
+  msg("Login successful!");
+
+  setTimeout(() => {
+    window.location.href = "index.html";
+  }, 600);
+}
+
+/* ================================
+      RESEND OTP
+================================ */
+function resendOTP(){
+  sendOTP();
+}
+
+/* ================================
+      OTP TIMER
+================================ */
+function startTimer(){
+  const t = document.getElementById("timer");
+  const interval = setInterval(()=>{
+    const left = Math.max(0, Math.floor((OTP_EXP - Date.now())/1000));
+    t.innerText = "OTP expires in: " + left + "s";
+    if(left <= 0) clearInterval(interval);
+  }, 1000);
+}
 </script>
-
 </body>
 </html>
