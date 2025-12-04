@@ -4,87 +4,58 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Secure Login - Call Dashboard</title>
+
 <style>
   body{font-family:Inter,system-ui; background:#f4f6fa; display:flex; align-items:center; justify-content:center; height:100vh;}
   .box{background:#fff; padding:25px; width:350px; border-radius:12px; box-shadow:0 6px 25px rgba(0,0,0,0.1);}
   input{width:100%; padding:10px; margin-top:10px; border-radius:8px; border:1px solid #d1d5db;}
   button{width:100%; padding:12px; margin-top:12px; border:0; border-radius:8px;
     background:#2563eb; color:#fff; font-weight:600; cursor:pointer;}
-  .linkbtn{background:none !important; color:#2563eb; cursor:pointer;}
   .muted{font-size:13px; color:#6b7280; margin-top:5px;}
   #msg{margin-top:10px; font-size:14px;}
 </style>
+
 </head>
 <body>
-
 <div class="box">
 
   <h2>Login</h2>
 
-  <!-- STEP 1: username + password -->
-  <div id="step1">
+  <div id="loginBox">
     <input id="username" placeholder="Username">
     <input id="password" type="password" placeholder="Password">
-    <button onclick="submitCredentials()">Send OTP</button>
-    <div class="muted">Correct username & password enter kare → OTP email pe aayega</div>
-  </div>
-
-  <!-- STEP 2: OTP -->
-  <div id="step2" style="display:none;">
-    <div class="muted">OTP sent to <span id="showEmail">your email</span></div>
-    <input id="otp" maxlength="6" placeholder="Enter 6-digit OTP">
-    <button onclick="verifyOTP()">Verify OTP</button>
-    <button class="linkbtn" id="resendBtn" onclick="resendOTP()">Resend OTP</button>
-    <div class="muted" id="timer"></div>
+    <button onclick="login()">Login</button>
+    <div class="muted">Enter correct username & password to access dashboard.</div>
   </div>
 
   <div id="msg"></div>
+
 </div>
 
-<!-- EmailJS -->
-<script src="https://cdn.jsdelivr.net/npm/emailjs-com@2/dist/email.min.js"></script>
 <script>
-/* ================================
-      REPLACE THESE 3 VALUES
-================================ */
-const SERVICE_ID = "service_r2lwycw";
-const TEMPLATE_ID = "template_410kijs";
-const PUBLIC_KEY  = "4abXrmx1cXuO-ytZn";
-/* ================================ */
-
-// EMAILJS init
-emailjs.init(PUBLIC_KEY);
-
-// USER DATA (given by you)
+// USER DATA (same as before)
 const USERS = {
   "admin": {
      // password = admin123
      passwordHash: "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9",
-     email: "mail.vermaelectronics@gmail.com"
   }
 };
 
-let CURRENT_USER = null;
-let OTP = null;
-let OTP_EXP = null;
-
-// SHA-256 hashing
+// SHA-256 hash
 async function sha256hex(str){
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
   return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
 }
 
-// Show message
+// show message
 function msg(text, bad=false){
   const m = document.getElementById("msg");
   m.style.color = bad ? "#dc2626" : "#059669";
   m.innerText = text;
 }
 
-/* ================================
-      STEP 1 — PASSWORD VERIFY
-================================ */
-async function submitCredentials(){
+// login function (NO OTP)
+async function login(){
   msg("");
 
   const u = document.getElementById("username").value.trim();
@@ -96,69 +67,21 @@ async function submitCredentials(){
   if(!user){ msg("Invalid credentials", true); return; }
 
   const hash = await sha256hex(p);
-  if(hash !== user.passwordHash){ msg("Invalid credentials", true); return; }
+  if(hash !== user.passwordHash){ 
+    msg("Invalid credentials", true); 
+    return;
+  }
 
-  CURRENT_USER = user;
-  sendOTP();
-}
-
-/* ================================
-      SEND OTP FUNCTION
-================================ */
-function sendOTP(){
-  OTP = String(Math.floor(100000 + Math.random()*900000));
-  OTP_EXP = Date.now() + 5*60*1000;
-
-  emailjs.send(SERVICE_ID, TEMPLATE_ID, { 
-     otp_code: OTP, 
-     to_email: CURRENT_USER.email 
-  }).then(()=>{
-     document.getElementById("step1").style.display = "none";
-     document.getElementById("step2").style.display = "block";
-     document.getElementById("showEmail").innerText = CURRENT_USER.email;
-     startTimer();
-     msg("OTP sent to your email");
-  }).catch(()=>{
-     msg("Failed to send OTP. Check EmailJS settings.", true);
-  });
-}
-
-/* ================================
-      VERIFY OTP
-================================ */
-function verifyOTP(){
-  const entered = document.getElementById("otp").value;
-
-  if(Date.now() > OTP_EXP) return msg("OTP expired", true);
-  if(entered !== OTP) return msg("Incorrect OTP", true);
-
-  // login success
-  localStorage.setItem("auth", "1");
+  // SUCCESS
   msg("Login successful!");
 
-  setTimeout(() => {
-    window.location.href = "dashboard.html";  // FIXED
+  localStorage.setItem("auth", "1");
+
+  setTimeout(()=>{
+    window.location.href = "dashboard.html";
   }, 600);
 }
-
-/* ================================
-      RESEND OTP
-================================ */
-function resendOTP(){
-  sendOTP();
-}
-
-/* ================================
-      OTP TIMER
-================================ */
-function startTimer(){
-  const t = document.getElementById("timer");
-  const interval = setInterval(()=>{
-    const left = Math.max(0, Math.floor((OTP_EXP - Date.now())/1000));
-    t.innerText = "OTP expires in: " + left + "s";
-    if(left <= 0) clearInterval(interval);
-  }, 1000);
-}
 </script>
+
 </body>
 </html>
