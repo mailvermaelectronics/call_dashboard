@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📞 Call Dashboard Pro+</title>
+<title>Call Dashboard Pro+ v10 (Final Chart Fix)</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
@@ -147,16 +147,16 @@ th{background:#fafafa;}
     td:nth-of-type(4):before{content:"Duration";}
     td:nth-of-type(5):before{content:"Date";}
     
-    /* FIX: Date Filter in one row (removed flex-direction: column) */
+    /* Date Filter in one row */
     #dateFilter { 
-        display: flex; /* Ensure it stays flex */
-        flex-wrap: wrap; /* Allow wrapping if screen is too small, but keeps row layout */
+        display: flex; 
+        flex-wrap: wrap; 
         align-items: center;
-        gap: 5px; /* Reduced gap for smaller screens */
+        gap: 5px; 
         padding: 8px;
     }
     #dateFilter input {
-        max-width: 100px; /* Limit input width */
+        max-width: 100px; 
     }
 }
 
@@ -222,7 +222,8 @@ th{background:#fafafa;}
         <div id="charts-container">
             <div id="chartBox">
                 <h3>Call Type Distribution</h3>
-                <canvas id="chart"></canvas>
+                <div id="doughnut-container">
+                    </div>
             </div>
 
             <div id="chartBox">
@@ -288,10 +289,9 @@ const rowsPerPage = 10;
 const exportBtn = document.getElementById('exportBtn');
 
 
-// --- CORE DATA LOADING (FIX: Removed currentPage = 1 reset) ---
+// --- CORE DATA LOADING ---
 async function loadData(){
     try{
-        // Added Math.random() to prevent aggressive caching and fetch fresh data
         let res=await fetch("data.json?cache="+Math.random()); 
         if(!res.ok) {
             throw new Error(`Data Load Error: Status ${res.status}`);
@@ -303,7 +303,6 @@ async function loadData(){
         console.error("Error loading data.json. Call logs will be empty.", e);
     }
     
-    // FIX: Do NOT reset currentPage here. This ensures auto-refresh doesn't jump back to page 1.
     applyFilters();
 }
 loadData();
@@ -323,7 +322,7 @@ document.getElementById("modeBtn").onclick=()=>{
     document.getElementById("modeBtn").innerText = document.body.classList.contains("dark")?"Light Mode":"Dark Mode";
 };
 
-// FIX: Reset page to 1 on manual refresh
+// Reset page to 1 on manual refresh
 document.getElementById("refreshBtn").onclick=()=>{
     currentPage = 1; 
     loadData();
@@ -361,7 +360,6 @@ document.querySelectorAll(".menu-item").forEach(item => {
             `;
         }
         
-        // Apply filters to ensure data and charts are updated
         applyFilters(); 
     };
 });
@@ -403,10 +401,9 @@ function applyFilters() {
 
     // Update UI components with the final filtered/searched data
     updateStats(filteredData); 
-    updateChart(filteredData);
+    updateChart(filteredData); // Chart updates here
     updateMonthlyChart(filteredData);
     
-    // Update table and pagination (retains currentPage value from global variable)
     changePage(currentPage);
 }
 
@@ -428,18 +425,16 @@ document.getElementById('search').onkeyup = () => { currentPage = 1; applyFilter
 // --- PAGINATION & TABLE LOGIC ---
 
 function changePage(page) {
-    // Ensure page number is valid
     const totalPages = Math.ceil(filteredData.length / rowsPerPage);
     if (page < 1) page = 1;
     if (page > totalPages) page = totalPages;
 
     currentPage = page;
-    const data = filteredData.slice().reverse(); // Show newest calls first
+    const data = filteredData.slice().reverse(); 
 
     const start = (page - 1) * rowsPerPage;
     const end = start + rowsPerPage;
     
-    // Get only the 10 rows for the current page
     const paginatedItems = data.slice(start, end); 
 
     updateTable(paginatedItems); 
@@ -453,7 +448,6 @@ function updateTable(data){
         tb.innerHTML = '<tr><td colspan="5">No calls found. Please ensure data.json is present or adjust filters.</td></tr>';
         return;
     }
-    // Only display the paginated data
     data.forEach(c=>{
         tb.innerHTML+=`<tr>
             <td>${c.number}</td>
@@ -471,7 +465,7 @@ function renderPagination(totalRows, currentPage) {
     
     const pageCount = Math.ceil(totalRows / rowsPerPage);
 
-    if (pageCount <= 1) return; // Hide pagination if only one page
+    if (pageCount <= 1) return; 
 
     // Previous Button
     const prevBtn = document.createElement('button');
@@ -480,7 +474,7 @@ function renderPagination(totalRows, currentPage) {
     prevBtn.onclick = () => changePage(currentPage - 1);
     paginationEl.appendChild(prevBtn);
 
-    // Page Number Buttons (Limit to show a manageable range)
+    // Page Number Buttons
     const maxButtons = 5;
     let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
     let endPage = Math.min(pageCount, startPage + maxButtons - 1);
@@ -508,16 +502,30 @@ function renderPagination(totalRows, currentPage) {
     paginationEl.appendChild(nextBtn);
 }
 
-// --- CHART FUNCTIONS (ANIMATION FIX) ---
+// --- CHART FUNCTIONS (PERMANENT ANIMATION FIX) ---
 function updateChart(data){
     let incoming=data.filter(x=>x.type==="incoming").length;
     let outgoing=data.filter(x=>x.type==="outgoing").length;
     let missed=data.filter(x=>x.type==="missed").length;
     
-    // FIX: Destroying and recreating the chart forces the animation ("nachna")
-    if(chart) chart.destroy(); 
+    const container = document.getElementById('doughnut-container');
     
-    chart=new Chart(document.getElementById("chart"),{
+    // 1. Existing chart ko destroy karein (agar chart object exist karta hai)
+    if(chart) {
+        chart.destroy();
+        chart = null; // Chart reference clear karein
+    }
+
+    // 2. Container ke andar ke saare elements ko saaf karein
+    container.innerHTML = '';
+    
+    // 3. Naya canvas element banaen
+    const newCanvas = document.createElement('canvas');
+    newCanvas.id = 'chart';
+    container.appendChild(newCanvas);
+    
+    // 4. Naye canvas par chart banaen (Animation will now definitely run)
+    chart=new Chart(newCanvas,{
         type:"doughnut",
         data:{labels:["Incoming","Outgoing","Missed"],datasets:[{data:[incoming,outgoing,missed],backgroundColor:["#4CAF50","#2196F3","#e63946"]}]},
         options:{
@@ -610,13 +618,11 @@ try{
 }catch(err){console.log("Webhook unavailable",err);}
 async function pushWebhook(data){
     allData.push(data);
-    // When new data comes, we don't reset the page, we just refresh the data on the current page.
     applyFilters(); 
 }
 
 // Initial setup to display Dashboard on load
 document.addEventListener('DOMContentLoaded', () => {
-    // Click dashboard to initialize the view and run the first chart animation
     document.querySelector('.menu-item[data-section="dashboard"]').click();
 });
 </script>
