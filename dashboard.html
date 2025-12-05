@@ -22,6 +22,15 @@ body.dark th{background:#222;}
 body.dark #dateFilter input{background:#333;color:white;border-color:#555;}
 body.dark #search {background:#1f1f1f; color:white; border-color:#555;}
 
+/* ** NEW FIX: Dark mode active filter button visibility ** */
+body.dark .filterBtn.active{
+    background: white; /* White background to be visible against dark backdrop */
+    color: black;      /* Black text for contrast */
+    border-color: white;
+}
+/* ** END NEW FIX ** */
+
+
 /* SIDEBAR */
 #sidebar{
     width:260px;
@@ -94,7 +103,7 @@ body.dark #search {background:#1f1f1f; color:white; border-color:#555;}
     border-radius:8px;
     box-shadow:0 2px 5px rgba(0,0,0,0.05);
 }
-/* ** FIX 1: Date Input Box Size ** */
+/* ** Date Input Box Size Fix ** */
 #dateFilter input{
     padding:5px;
     border:1px solid #ccc;
@@ -104,7 +113,7 @@ body.dark #search {background:#1f1f1f; color:white; border-color:#555;}
 }
 
 .filterBtn{padding:10px 16px;border-radius:8px;border:1px solid #bbb;cursor:pointer;background:white;}
-.filterBtn.active{background:black;color:white;border-color:black;}
+.filterBtn.active{background:black;color:white;border-color:black;} /* Default active state (Light Mode) */
 
 /* TABLE */
 table{width:100%;border-collapse:collapse;background:white;border-radius:16px;overflow:hidden;margin-bottom:15px;}
@@ -541,7 +550,7 @@ function updateTable(data){
     let tb=document.getElementById("tbody");
     tb.innerHTML="";
      if (data.length === 0) {
-        tb.innerHTML = '<tr><td colspan="5">No calls found.</td></tr>';
+        tb.innerHTML = '<tr><td colspan="5">No calls found. Please ensure data.json is present or adjust filters.</td></tr>';
         return;
     }
     data.forEach(c=>{
@@ -608,7 +617,7 @@ function updateChart(data){
     
     if (!chartBox) return;
     
-    // पुराने चार्ट को नष्ट और कैनवस को हटाना
+    // पुराने चार्ट को नष्ट और कैनवस को हटाना (Animation Fix)
     let oldCanvas = document.getElementById('chart');
     if (oldCanvas) {
         if(chart) {
@@ -659,7 +668,7 @@ function updateMonthlyChart(data){
     const chartBox = document.querySelector('#charts-container > #chartBox:last-child');
     if (!chartBox) return;
 
-    // पुराने चार्ट को नष्ट और कैनवस को हटाना
+    // पुराने चार्ट को नष्ट और कैनवस को हटाना (Animation Fix)
     let oldCanvas = document.getElementById('monthChart');
     if (oldCanvas) {
         if(monthlyChart) {
