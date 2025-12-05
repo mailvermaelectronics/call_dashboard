@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Secure Login - Call Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+
 
 <style>
   /* Global Reset and Typography */
@@ -29,18 +31,16 @@
     transition:transform 0.3s ease;
   }
 
-  /* Logo Styling (Final Fix) */
+  /* Logo Styling */
   .logo-container {
     text-align: center;
     margin-bottom: 25px;
     background-color: #ffffff; 
   }
   .logo {
-    /* Logo image styling */
     width: auto; 
     max-height: 80px; 
     display: inline-block;
-    /* FIX: Force transparent background on the image element itself */
     background-color: transparent !important; 
     border: none !important; 
   }
@@ -70,9 +70,54 @@
     outline:none;
     box-shadow:0 0 0 3px rgba(37, 99, 235, 0.2);
   }
+
+  /* Password Container: To hold both input and toggle button */
+  .password-container {
+    position: relative;
+    /* This makes the container act like the input field itself, 
+       ensuring proper spacing between inputs. */
+    margin-top: 15px; 
+  }
+  
+  /* Password Input inside the container */
+  .password-container input {
+    margin-top: 0; /* Remove redundant margin */
+    /* Adjust width and padding to make space for the toggle button inside the border */
+    width: 100%; 
+    padding-right: 45px; /* Enough space for the icon and padding */
+    box-sizing: border-box; /* Include padding/border in the element's total width/height */
+  }
+  
+  /* Toggle Button Styling (Positioned absolutely inside the container) */
+  .toggle-password {
+    position: absolute;
+    right: 5px; /* Adjust spacing from the right border */
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #6b7280;
+    line-height: 1;
+    padding: 10px; 
+    z-index: 10;
+  }
+  .toggle-password:hover {
+    color: #1f2937;
+  }
+
+  /* Material Symbol Icons Styling */
+  .material-symbols-outlined {
+    font-variation-settings:
+      'FILL' 0,
+      'wght' 400,
+      'GRAD' 0,
+      'opsz' 24;
+    font-size: 24px; /* Icon size */
+  }
   
   /* Button Styling */
-  button{
+  button[onclick="login()"]{
     width:100%;
     padding:14px;
     margin-top:25px;
@@ -85,7 +130,7 @@
     font-size:16px;
     transition:background-color 0.3s, box-shadow 0.3s;
   }
-  button:hover{
+  button[onclick="login()"]:hover{
     background:#1d4ed8;
     box-shadow:0 4px 15px rgba(37, 99, 235, 0.3);
   }
@@ -120,7 +165,14 @@
 
   <div id="loginBox">
     <input id="username" placeholder="Username" autocomplete="username">
-    <input id="password" type="password" placeholder="Password" autocomplete="current-password">
+    
+    <div class="password-container">
+      <input id="password" type="password" placeholder="Password" autocomplete="current-password">
+      <button type="button" class="toggle-password" onclick="togglePasswordVisibility()">
+        <span id="toggleIcon" class="material-symbols-outlined">visibility_off</span>
+      </button>
+    </div>
+    
     <button onclick="login()">Secure Login</button>
     <div class="muted">Enter correct username & password to access the secure dashboard.</div>
   </div>
@@ -152,6 +204,23 @@ function msg(text, bad=false){
   m.innerText = text;
 }
 
+// Function to toggle password visibility (Updated for Google Material Icons)
+function togglePasswordVisibility() {
+  const passwordInput = document.getElementById('password');
+  const toggleIcon = document.getElementById('toggleIcon');
+  
+  if (passwordInput.type === 'password') {
+    passwordInput.type = 'text';
+    // Change icon to visibility (Shown state)
+    toggleIcon.innerText = 'visibility'; 
+  } else {
+    passwordInput.type = 'password';
+    // Change icon back to visibility_off (Hidden state)
+    toggleIcon.innerText = 'visibility_off'; 
+  }
+}
+
+
 // login function (NO OTP)
 async function login(){
   msg("");
@@ -160,7 +229,7 @@ async function login(){
   const p = document.getElementById("password").value;
 
   // Disable button during process
-  const loginButton = document.querySelector('button');
+  const loginButton = document.querySelector('button[onclick="login()"]');
   loginButton.disabled = true;
 
   if(!u || !p){ 
