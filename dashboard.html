@@ -10,7 +10,14 @@
 /* --- CSS: Button Size Fix & General Styles --- */
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:Inter,sans-serif;background:#f4f4f8;transition:0.3s;}
+/* DARK MODE CSS FIX */
 body.dark{background:#111;color:#fff;}
+body.dark #sidebar, body.dark .card, body.dark #dateFilter, body.dark table, body.dark #chartBox, body.dark .hidden-content {background:#1b1b1b; color:#fff;}
+body.dark #modeBtn{background:white;color:black;}
+body.dark .menu-item:hover{background:#222;}
+body.dark .filterBtn{background:#1f1f1f;color:white;border-color:#444;}
+body.dark th,body.dark td{border-color:#333;}
+body.dark th{background:#222;}
 
 /* SIDEBAR */
 #sidebar{
@@ -25,13 +32,10 @@ body.dark{background:#111;color:#fff;}
     transition:0.3s;
     z-index:1000;
 }
-body.dark #sidebar{background:#1b1b1b;}
 #sidebar h2{margin-bottom:25px;font-size:22px;font-weight:700;}
 .menu-item{padding:12px;border-radius:10px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:12px;font-size:15px;}
 .menu-item:hover{background:#efefef;}
-body.dark .menu-item:hover{background:#222;}
 .menu-item.active{background:#2196F3;color:white;}
-body.dark .menu-item.active{background:#2196F3;color:white;}
 
 /* MOBILE SIDEBAR */
 @media(max-width:768px){
@@ -53,11 +57,9 @@ body.dark .menu-item.active{background:#2196F3;color:white;}
 
 /* BUTTON SIZE FIX: Apply consistent styling to all action buttons */
 #modeBtn, #logoutBtn, #refreshBtn, #exportBtn{
-    /* Consistent size and spacing */
     padding: 10px 16px;
-    font-size: 14px; /* Ensure font size is consistent */
-    height: 40px; /* Optional: Fix height for perfect alignment */
-    /* Shared styles */
+    font-size: 14px; 
+    height: 40px; 
     border: none;
     border-radius: 8px;
     cursor: pointer;
@@ -67,9 +69,7 @@ body.dark .menu-item.active{background:#2196F3;color:white;}
     gap: 5px;
     transition: 0.2s;
 } 
-
 #modeBtn{background:black;color:white;}
-body.dark #modeBtn{background:white;color:black;}
 #logoutBtn{background:#e63946;color:white;}
 #refreshBtn{background:#ff9800;color:white;}
 #exportBtn{background:#00bcd4;color:white;}
@@ -77,11 +77,10 @@ body.dark #modeBtn{background:white;color:black;}
 /* CARDS */
 #cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:15px;margin-bottom:20px;}
 .card{background:white;padding:20px;border-radius:16px;box-shadow:0 5px 20px rgba(0,0,0,0.1);}
-body.dark .card{background:#1b1b1b;}
 .card h3{margin:0;font-size:15px;opacity:0.8;}
 .card .value{font-size:28px;font-weight:700;margin-top:8px;text-align:center;}
 
-/* FILTERS & NEW DATE FILTER */
+/* FILTERS & DATE FILTER */
 #filters-row{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:15px;margin-bottom:20px;}
 #filters{display:flex;flex-wrap:wrap;gap:10px;} 
 #dateFilter{
@@ -93,21 +92,16 @@ body.dark .card{background:#1b1b1b;}
     border-radius:8px;
     box-shadow:0 2px 5px rgba(0,0,0,0.05);
 }
-body.dark #dateFilter{background:#1b1b1b;}
 #dateFilter input{padding:5px;border:1px solid #ccc;border-radius:5px;}
 
 .filterBtn{padding:10px 16px;border-radius:8px;border:1px solid #bbb;cursor:pointer;background:white;}
 .filterBtn.active{background:black;color:white;border-color:black;}
-body.dark .filterBtn{background:#1f1f1f;color:white;border-color:#444;}
 
 /* TABLE */
 #call-logs-table{display:none;} 
 table{width:100%;border-collapse:collapse;background:white;border-radius:16px;overflow:hidden;margin-bottom:30px;}
-body.dark table{background:#1b1b1b;}
 th,td{padding:12px;border-bottom:1px solid #eee;text-align:center;}
-body.dark th,body.dark td{border-color:#333;}
 th{background:#fafafa;}
-body.dark th{background:#222;}
 @media(max-width:600px){
     table,thead,tbody,th,td,tr{display:block;}
     th{display:none;}
@@ -120,23 +114,23 @@ body.dark th{background:#222;}
     td:nth-of-type(5):before{content:"Date";}
 }
 
-/* CHARTS SIZE FIX */
+/* CHART ALIGNMENT FIX: Use grid for horizontal alignment on large screens */
 #charts-container {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); /* Use minmax for responsiveness */
     gap: 20px;
-    justify-content: space-around;
     margin-top: 20px;
+    justify-content: center;
 }
+
 #chartBox{
     background:white;
     border-radius:20px;
     padding:25px;
     box-shadow:0 5px 25px rgba(0,0,0,0.1);
-    max-width: 500px; 
+    /* Removed max-width here, let grid handle the sizing */
     width: 100%;
 }
-body.dark #chartBox{background:#1b1b1b;}
 #chartBox canvas{max-width:100% !important;height:auto !important;}
 
 /* Dynamic Content Style */
@@ -149,9 +143,6 @@ body.dark #chartBox{background:#1b1b1b;}
     text-align: center;
     font-size: 20px;
     font-weight: 600;
-}
-body.dark .hidden-content {
-    background: #1b1b1b;
 }
 
 </style>
@@ -244,6 +235,23 @@ let filteredData = [];
 let chart, monthlyChart;
 const exportBtn = document.getElementById('exportBtn');
 
+// --- 1. DARK MODE & LOGOUT FIX ---
+document.getElementById('modeBtn').onclick = function() {
+    document.body.classList.toggle('dark');
+    this.innerText = document.body.classList.contains('dark') ? 'Light Mode' : 'Dark Mode';
+};
+
+document.getElementById('logoutBtn').onclick = function() {
+    if (confirm("Are you sure you want to log out?")) {
+        // Here you would add your actual logout logic (e.g., redirect to login page)
+        alert("Logged out successfully! (In a real app, you would be redirected.)");
+        // Example: window.location.href = '/login';
+    }
+};
+
+document.getElementById('refreshBtn').onclick = loadData;
+
+
 // --- DYNAMIC CONTENT & MENU LOGIC FIX ---
 document.querySelectorAll(".menu-item").forEach(item => {
     item.onclick = () => {
@@ -271,10 +279,10 @@ document.querySelectorAll(".menu-item").forEach(item => {
             callLogsSection.style.display = 'block';
             exportBtn.style.display = 'inline-flex'; // Show Export button in Call Logs
             document.getElementById('search').disabled = false;
-            applyFilters();
+            applyFilters(); // Show all calls by default
         } else { // Profile or Settings
             dynamicContent.style.display = 'block';
-            // DEVELOPMENT MESSAGE ADDED HERE
+            // DEVELOPMENT MESSAGE
             dynamicContent.innerHTML = `
                 <h2>${section.toUpperCase()}</h2>
                 <p>Welcome to the ${section} section. This area is **under active development** and features will be available soon!</p>
@@ -298,12 +306,14 @@ async function loadData() {
         allData = []; 
     }
     
+    // Rerun filter after loading/reloading data
     applyFilters(); 
 }
 loadData(); 
-setInterval(loadData, 8000); 
+// setInterval(loadData, 8000); // Re-enable for auto-refresh if needed
 
-// --- DATE & TYPE FILTERING LOGIC ---
+
+// --- 2. CALL LOGS/FILTERING LOGIC FIX ---
 function applyFilters() {
     let temp = allData;
 
@@ -314,10 +324,11 @@ function applyFilters() {
         temp = temp.filter(x => x.type === type);
     }
 
-    // 2. Apply Date Filter
+    // 2. Apply Date Filter (Only filter if BOTH inputs are used, otherwise show all)
     const startDate = document.getElementById('startDate').value;
     const endDate = document.getElementById('endDate').value;
     
+    // FIX: Only filter by date if at least one input has a value
     if (startDate || endDate) {
         temp = temp.filter(x => {
             const dataDate = x.date.split('T')[0];
@@ -340,7 +351,7 @@ function applyFilters() {
     const q = document.getElementById("search").value.toLowerCase();
     const searchedData = temp.filter(x => x.number.toLowerCase().includes(q) || x.name.toLowerCase().includes(q));
 
-    // Update UI components based on the filtered data
+    // Update UI components
     updateStats(filteredData);
     updateChart(filteredData);
     updateMonthlyChart(filteredData);
