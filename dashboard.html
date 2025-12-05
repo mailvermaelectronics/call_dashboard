@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
+/* --- CSS: Button Size Fix & General Styles --- */
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:Inter,sans-serif;background:#f4f4f8;transition:0.3s;}
 body.dark{background:#111;color:#fff;}
@@ -44,12 +45,34 @@ body.dark .menu-item.active{background:#2196F3;color:white;}
 /* TOPBAR */
 #topbar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;margin-bottom:20px;gap:10px;}
 #search{padding:10px 14px;width:250px;border-radius:8px;border:1px solid #ccc;}
-#modeBtn,#logoutBtn,#refreshBtn{padding:10px 16px;border:none;border-radius:8px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:5px;} /* Added #refreshBtn style */
+#topbar > div { 
+    display: flex;
+    gap: 10px; 
+    align-items: center;
+}
+
+/* BUTTON SIZE FIX: Apply consistent styling to all action buttons */
+#modeBtn, #logoutBtn, #refreshBtn, #exportBtn{
+    /* Consistent size and spacing */
+    padding: 10px 16px;
+    font-size: 14px; /* Ensure font size is consistent */
+    height: 40px; /* Optional: Fix height for perfect alignment */
+    /* Shared styles */
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: 0.2s;
+} 
+
 #modeBtn{background:black;color:white;}
 body.dark #modeBtn{background:white;color:black;}
-#logoutBtn{background:#e63946;color:white;margin-left:10px;}
-#refreshBtn{background:#ff9800;color:white;margin-right:10px;} /* Refresh button style */
-
+#logoutBtn{background:#e63946;color:white;}
+#refreshBtn{background:#ff9800;color:white;}
+#exportBtn{background:#00bcd4;color:white;}
 
 /* CARDS */
 #cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:15px;margin-bottom:20px;}
@@ -58,13 +81,27 @@ body.dark .card{background:#1b1b1b;}
 .card h3{margin:0;font-size:15px;opacity:0.8;}
 .card .value{font-size:28px;font-weight:700;margin-top:8px;text-align:center;}
 
-/* FILTERS */
-#filters{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px;}
+/* FILTERS & NEW DATE FILTER */
+#filters-row{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:15px;margin-bottom:20px;}
+#filters{display:flex;flex-wrap:wrap;gap:10px;} 
+#dateFilter{
+    display:flex; 
+    align-items:center; 
+    gap:10px; 
+    background:white; 
+    padding:8px 15px;
+    border-radius:8px;
+    box-shadow:0 2px 5px rgba(0,0,0,0.05);
+}
+body.dark #dateFilter{background:#1b1b1b;}
+#dateFilter input{padding:5px;border:1px solid #ccc;border-radius:5px;}
+
 .filterBtn{padding:10px 16px;border-radius:8px;border:1px solid #bbb;cursor:pointer;background:white;}
 .filterBtn.active{background:black;color:white;border-color:black;}
 body.dark .filterBtn{background:#1f1f1f;color:white;border-color:#444;}
 
 /* TABLE */
+#call-logs-table{display:none;} 
 table{width:100%;border-collapse:collapse;background:white;border-radius:16px;overflow:hidden;margin-bottom:30px;}
 body.dark table{background:#1b1b1b;}
 th,td{padding:12px;border-bottom:1px solid #eee;text-align:center;}
@@ -83,10 +120,40 @@ body.dark th{background:#222;}
     td:nth-of-type(5):before{content:"Date";}
 }
 
-/* CHARTS */
-#chartBox{background:white;border-radius:20px;padding:25px;margin-top:20px;box-shadow:0 5px 25px rgba(0,0,0,0.1);}
+/* CHARTS SIZE FIX */
+#charts-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    justify-content: space-around;
+    margin-top: 20px;
+}
+#chartBox{
+    background:white;
+    border-radius:20px;
+    padding:25px;
+    box-shadow:0 5px 25px rgba(0,0,0,0.1);
+    max-width: 500px; 
+    width: 100%;
+}
 body.dark #chartBox{background:#1b1b1b;}
-canvas{max-width:100% !important;height:auto !important;}
+#chartBox canvas{max-width:100% !important;height:auto !important;}
+
+/* Dynamic Content Style */
+.hidden-content {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 5px 25px rgba(0,0,0,0.1);
+    min-height: 400px;
+    text-align: center;
+    font-size: 20px;
+    font-weight: 600;
+}
+body.dark .hidden-content {
+    background: #1b1b1b;
+}
+
 </style>
 </head>
 <body>
@@ -103,98 +170,199 @@ canvas{max-width:100% !important;height:auto !important;}
     <div id="topbar">
         <input id="search" placeholder="Search number or name...">
         <div>
+            <button id="exportBtn" style="display: none;"><i class="fa fa-download"></i> Export CSV</button> 
             <button id="refreshBtn"><i class="fa fa-sync-alt"></i> Refresh</button> 
             <button id="modeBtn">Dark Mode</button>
             <button id="logoutBtn">Logout</button>
         </div>
     </div>
+    
+    <div id="dashboard-content" class="section-content">
+        <div id="cards">
+            <div class="card"><h3>Total Calls</h3><div class="value" id="totalCalls">0</div></div>
+            <div class="card"><h3>Missed Calls</h3><div class="value" id="missedCalls">0</div></div>
+            <div class="card"><h3>Today's Calls</h3><div class="value" id="todayCalls">0</div></div>
+        </div>
+        
+        <div id="charts-container">
+            <div id="chartBox">
+                <h3>Call Type Distribution</h3>
+                <canvas id="chart"></canvas>
+            </div>
 
-    <div id="cards">
-        <div class="card"><h3>Total Calls</h3><div class="value" id="totalCalls">0</div></div>
-        <div class="card"><h3>Missed Calls</h3><div class="value" id="missedCalls">0</div></div>
-        <div class="card"><h3>Today's Calls</h3><div class="value" id="todayCalls">0</div></div>
+            <div id="chartBox">
+                <h3>Monthly Calls</h3>
+                <canvas id="monthChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div id="call-logs-section" style="display:none;">
+        <div id="filters-row">
+            <div id="filters">
+                <button class="filterBtn active" data-type="all">All</button>
+                <button class="filterBtn" data-type="incoming">Incoming</button>
+                <button class="filterBtn" data-type="outgoing">Outgoing</button>
+                <button class="filterBtn" data-type="missed">Missed</button>
+            </div>
+             <div id="dateFilter">
+                <label for="startDate">Date From:</label>
+                <input type="date" id="startDate">
+                <label for="endDate">To:</label>
+                <input type="date" id="endDate">
+            </div>
+        </div>
+
+        <div id="call-logs-table">
+             <table>
+                <thead>
+                    <tr>
+                        <th>Number</th>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Duration</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody"></tbody>
+            </table>
+        </div>
     </div>
 
-    <div id="filters">
-        <button class="filterBtn active" data-type="all">All</button>
-        <button class="filterBtn" data-type="incoming">Incoming</button>
-        <button class="filterBtn" data-type="outgoing">Outgoing</button>
-        <button class="filterBtn" data-type="missed">Missed</button>
+    <div id="dynamic-content" class="hidden-content" style="display: none;">
+        Loading content...
     </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Number</th>
-                <th>Name</th>
-                <th>Type</th>
-                <th>Duration</th>
-                <th>Date</th>
-            </tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-    </table>
-
-    <div id="chartBox">
-        <h3>Call Type Distribution</h3>
-        <canvas id="chart"></canvas>
-    </div>
-
-    <div id="chartBox">
-        <h3>Monthly Calls</h3>
-        <canvas id="monthChart"></canvas>
-    </div>
 </div>
 
 <script>
-// LOGIN PROTECTION
-// FIX: Using sessionStorage instead of localStorage
-if(sessionStorage.getItem("auth")!=="1"){ window.location.href="index.html"; }
+// --- JAVASCRIPT: Functions & Fixes ---
 
-// MENU ITEM CLICK
-document.querySelectorAll(".menu-item").forEach(item=>{
-    item.onclick=()=>{
-        document.querySelectorAll(".menu-item").forEach(i=>i.classList.remove("active"));
+// GLOBAL DATA
+let allData = [];
+let filteredData = []; 
+let chart, monthlyChart;
+const exportBtn = document.getElementById('exportBtn');
+
+// --- DYNAMIC CONTENT & MENU LOGIC FIX ---
+document.querySelectorAll(".menu-item").forEach(item => {
+    item.onclick = () => {
+        document.querySelectorAll(".menu-item").forEach(i => i.classList.remove("active"));
         item.classList.add("active");
-        // Currently we do not hide content, mobile view same as desktop
+        
+        const section = item.dataset.section;
+        const dashboardContent = document.getElementById('dashboard-content');
+        const callLogsSection = document.getElementById('call-logs-section');
+        const dynamicContent = document.getElementById('dynamic-content');
+
+        // Reset display states
+        dashboardContent.style.display = 'none';
+        callLogsSection.style.display = 'none';
+        dynamicContent.style.display = 'none';
+        
+        // EXPORT BUTTON VISIBILITY CONTROL
+        exportBtn.style.display = 'none';
+
+        if (section === 'dashboard') {
+            dashboardContent.style.display = 'block';
+            document.getElementById('search').disabled = false;
+            applyFilters(); 
+        } else if (section === 'calls') {
+            callLogsSection.style.display = 'block';
+            exportBtn.style.display = 'inline-flex'; // Show Export button in Call Logs
+            document.getElementById('search').disabled = false;
+            applyFilters();
+        } else { // Profile or Settings
+            dynamicContent.style.display = 'block';
+            // DEVELOPMENT MESSAGE ADDED HERE
+            dynamicContent.innerHTML = `
+                <h2>${section.toUpperCase()}</h2>
+                <p>Welcome to the ${section} section. This area is **under active development** and features will be available soon!</p>
+            `;
+            document.getElementById('search').disabled = true;
+        }
     };
 });
 
-// DARK MODE
-document.getElementById("modeBtn").onclick=()=>{
-    document.body.classList.toggle("dark");
-    document.getElementById("modeBtn").innerText = document.body.classList.contains("dark")?"Light Mode":"Dark Mode";
-};
-
-// LOGOUT
-document.getElementById("logoutBtn").onclick=()=>{
-    // FIX: Using sessionStorage instead of localStorage
-    sessionStorage.removeItem("auth");
-    window.location.href="index.html";
-};
-
-// REFRESH BUTTON LOGIC
-document.getElementById("refreshBtn").onclick=()=>{
-    loadData();
-};
-
-// DATA
-let allData=[], chart, monthlyChart;
-async function loadData(){
-    try{
-        let res=await fetch("data.json?cache="+Math.random());
-        allData=await res.json();
-        updateTable(allData);
-        updateStats(allData);
-        updateChart(allData);
-        updateMonthlyChart(allData);
-    }catch(e){ 
-        console.error(e); 
+// --- CORE DATA LOADING (Dummy Data Removed) ---
+async function loadData() {
+    try {
+        let res = await fetch("data.json?cache=" + Math.random());
+        if (!res.ok) {
+            throw new Error('Could not load data.json. Status: ' + res.status);
+        }
+        allData = await res.json();
+        console.log("Data loaded successfully.");
+    } catch (e) {
+        console.error("Data Load Error: Failed to load data.json. Please ensure the file is present. ", e.message);
+        allData = []; 
     }
+    
+    applyFilters(); 
 }
-loadData();
-setInterval(loadData,8000);
+loadData(); 
+setInterval(loadData, 8000); 
 
+// --- DATE & TYPE FILTERING LOGIC ---
+function applyFilters() {
+    let temp = allData;
+
+    // 1. Apply Type Filter
+    const activeType = document.querySelector('#filters .filterBtn.active');
+    const type = activeType ? activeType.dataset.type : 'all';
+    if (type !== 'all') {
+        temp = temp.filter(x => x.type === type);
+    }
+
+    // 2. Apply Date Filter
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    
+    if (startDate || endDate) {
+        temp = temp.filter(x => {
+            const dataDate = x.date.split('T')[0];
+            
+            if (startDate && endDate) {
+                return dataDate >= startDate && dataDate <= endDate;
+            } else if (startDate) {
+                return dataDate >= startDate;
+            } else if (endDate) {
+                return dataDate <= endDate;
+            }
+            return true;
+        });
+    }
+    
+    // Update global filtered data (used for stats, charts, and export)
+    filteredData = temp;
+    
+    // 3. Apply Search Filter
+    const q = document.getElementById("search").value.toLowerCase();
+    const searchedData = temp.filter(x => x.number.toLowerCase().includes(q) || x.name.toLowerCase().includes(q));
+
+    // Update UI components based on the filtered data
+    updateStats(filteredData);
+    updateChart(filteredData);
+    updateMonthlyChart(filteredData);
+
+    // Table uses searchedData 
+    updateTable(searchedData); 
+}
+
+// Attach event listeners for filters
+document.querySelectorAll(".filterBtn").forEach(btn => {
+    btn.onclick = () => {
+        document.querySelectorAll(".filterBtn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        applyFilters();
+    };
+});
+
+document.getElementById('startDate').onchange = applyFilters;
+document.getElementById('endDate').onchange = applyFilters;
+document.getElementById('search').onkeyup = applyFilters; 
+
+// --- UTILITY FUNCTIONS ---
 function updateStats(d){
     document.getElementById("totalCalls").innerText=d.length;
     document.getElementById("missedCalls").innerText=d.filter(x=>x.type==="missed").length;
@@ -205,34 +373,22 @@ function updateStats(d){
 function updateTable(data){
     let tb=document.getElementById("tbody");
     tb.innerHTML="";
+    if (data.length === 0) {
+         tb.innerHTML = '<tr><td colspan="5">No calls found for the selected filter/search.</td></tr>';
+         return;
+    }
     data.slice().reverse().forEach(c=>{
         tb.innerHTML+=`<tr>
             <td>${c.number}</td>
             <td>${c.name}</td>
             <td>${c.type}</td>
             <td>${c.duration}</td>
-            <td>${c.date}</td>
+            <td>${c.date.split('T')[0]}</td>
         </tr>`;
     });
 }
 
-document.getElementById("search").onkeyup=()=>{
-    let q=document.getElementById("search").value.toLowerCase();
-    let f=allData.filter(x=>x.number.toLowerCase().includes(q)||x.name.toLowerCase().includes(q));
-    updateTable(f); updateChart(f); updateMonthlyChart(f);
-};
-
-document.querySelectorAll(".filterBtn").forEach(btn=>{
-    btn.onclick=()=>{
-        document.querySelectorAll(".filterBtn").forEach(b=>b.classList.remove("active"));
-        btn.classList.add("active");
-        let t=btn.dataset.type;
-        let f=t==="all"?allData:allData.filter(x=>x.type===t);
-        updateTable(f); updateChart(f); updateMonthlyChart(f);
-    };
-});
-
-// CHARTS
+// --- CHART FUNCTIONS ---
 function updateChart(data){
     let incoming=data.filter(x=>x.type==="incoming").length;
     let outgoing=data.filter(x=>x.type==="outgoing").length;
@@ -241,7 +397,11 @@ function updateChart(data){
     chart=new Chart(document.getElementById("chart"),{
         type:"doughnut",
         data:{labels:["Incoming","Outgoing","Missed"],datasets:[{data:[incoming,outgoing,missed],backgroundColor:["#4CAF50","#2196F3","#e63946"]}]},
-        options:{responsive:true,plugins:{legend:{position:"bottom"}}}
+        options:{
+            responsive:true, 
+            maintainAspectRatio: true, 
+            aspectRatio: 1, 
+            plugins:{legend:{position:"bottom"}}}
     });
 }
 
@@ -254,22 +414,61 @@ function updateMonthlyChart(data){
     monthlyChart=new Chart(document.getElementById("monthChart"),{
         type:"bar",
         data:{labels,datasets:[{label:"Monthly Calls",data:values,backgroundColor:"#2196F3"}]},
-        options:{responsive:true,plugins:{legend:{display:false}}}
+        options:{
+            responsive:true, 
+            maintainAspectRatio: true, 
+            aspectRatio: 1, 
+            plugins:{legend:{display:false}}}
     });
 }
 
-// LIVE WEBHOOK
-async function pushWebhook(data){
-    allData.push(data);
-    updateTable(allData);
-    updateStats(allData);
-    updateChart(allData);
-    updateMonthlyChart(allData);
-}
-try{
-    const stream=new EventSource("https://your-proxy-endpoint/webhook");
-    stream.onmessage=e=>pushWebhook(JSON.parse(e.data));
-}catch(err){console.log("Webhook unavailable",err);}
+// --- EXPORT TO CSV FUNCTION ---
+document.getElementById("exportBtn").onclick = () => {
+    const data = filteredData; 
+    if (data.length === 0) {
+        alert("No data to export.");
+        return;
+    }
+
+    const headers = ["Number", "Name", "Type", "Duration", "Date"];
+    const rows = [headers.join(',')];
+
+    data.forEach(item => {
+        const row = [
+            item.number,
+            item.name,
+            item.type,
+            item.duration,
+            item.date.split('T')[0] 
+        ].map(d => `"${d}"`).join(','); 
+
+        rows.push(row);
+    });
+
+    const csvContent = rows.join('\n');
+    
+    // Create and download the CSV file
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    if (link.download !== undefined) { 
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", "call_logs_export_" + new Date().toISOString().slice(0, 10) + ".csv");
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        console.log("Filtered data exported successfully.");
+    } else {
+        alert("Your browser does not support CSV download.");
+    }
+};
+
+// Initial setup to display Dashboard on load
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelector('.menu-item[data-section="dashboard"]').click();
+});
+
 </script>
 </body>
 </html>
