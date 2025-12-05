@@ -94,7 +94,14 @@ body.dark #search {background:#1f1f1f; color:white; border-color:#555;}
     border-radius:8px;
     box-shadow:0 2px 5px rgba(0,0,0,0.05);
 }
-#dateFilter input{padding:5px;border:1px solid #ccc;border-radius:5px;}
+/* ** FIX 1: Date Input Box Size ** */
+#dateFilter input{
+    padding:5px;
+    border:1px solid #ccc;
+    border-radius:5px;
+    width: 100px; /* DD/MM/YYYY को पूरी तरह भरने के लिए चौड़ाई को सीमित किया गया */
+    text-align: center;
+}
 
 .filterBtn{padding:10px 16px;border-radius:8px;border:1px solid #bbb;cursor:pointer;background:white;}
 .filterBtn.active{background:black;color:white;border-color:black;}
@@ -400,7 +407,7 @@ document.getElementById("modeBtn").onclick=()=>{
     document.getElementById("modeBtn").innerText = document.body.classList.contains("dark")?"Light Mode":"Dark Mode";
 };
 
-// ** Refresh Button FIX: Calls loadData, which calls applyFilters, which updates charts **
+// ** Refresh Button FIX: Calls loadData, which calls applyFilters, which updates charts with animation **
 document.getElementById("refreshBtn").onclick=()=>{
     currentPage = 1; 
     loadData();
@@ -441,7 +448,7 @@ document.querySelectorAll(".menu-item").forEach(item => {
             `;
         }
         
-        // ** Centralized logic for updating stats and charts **
+        // ** Centralized logic for updating stats and charts - This triggers the animation when switching to dashboard **
         applyFilters(); 
     };
 });
