@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Call Dashboard Pro+ v11 (Chart Animation Guaranteed)</title>
+<title>Call Dashboard Pro+ v12 (Final Fixes)</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
@@ -147,7 +147,7 @@ th{background:#fafafa;}
     td:nth-of-type(4):before{content:"Duration";}
     td:nth-of-type(5):before{content:"Date";}
     
-    /* Date Filter in one row */
+    /* Date Filter in one row (Fixed CSS) */
     #dateFilter { 
         display: flex; 
         flex-wrap: wrap; 
@@ -501,7 +501,7 @@ function renderPagination(totalRows, currentPage) {
     paginationEl.appendChild(nextBtn);
 }
 
-// --- CHART FUNCTIONS (PERMANENT ANIMATION FIX) ---
+// --- CHART FUNCTIONS (PERMANENT ANIMATION FIX AND SYNTAX ERROR FIX) ---
 function updateChart(data){
     let incoming=data.filter(x=>x.type==="incoming").length;
     let outgoing=data.filter(x=>x.type==="outgoing").length;
@@ -510,15 +510,17 @@ function updateChart(data){
     // Chart Container जहाँ Doughnut Chart रहता है (पहला #chartBox)
     const chartBox = document.querySelector('#charts-container > #chartBox:first-child'); 
     
-    // 1. अगर पुराना Chart Object मौजूद है, तो उसे नष्ट करें।
-    if(chart) {
-        chart.destroy();
-        chart = null; 
-    }
-
-    // 2. पुराने Canvas को DOM से हटा दें (पुराने 'chart' id वाले canvas को)
+    // FIX 1: Safety check to prevent crashing if the element is not found
+    if (!chartBox) return;
+    
+    // 2. पुराने Canvas को DOM से हटा दें
     let oldCanvas = document.getElementById('chart');
     if (oldCanvas) {
+        // 1. अगर पुराना Chart Object मौजूद है, तो उसे नष्ट करें (Destroy before removing element)
+        if(chart) {
+            chart.destroy();
+            chart = null; 
+        }
         oldCanvas.remove();
     }
     
@@ -526,19 +528,19 @@ function updateChart(data){
     const newCanvas = document.createElement('canvas');
     newCanvas.id = 'chart'; // ID वही रखें
     
-    // 4. नए Canvas को ChartBox में जोड़ें (H3 के बाद जोड़ने के लिए)
-    // H3 के बाद जोड़ने के लिए, H3 के बाद insert करें।
+    // 4. नए Canvas को ChartBox में जोड़ें (H3 के बाद)
     const h3 = chartBox.querySelector('h3');
     if (h3) {
-        h3.after(newCanvas);
+        h3.after(newCanvas); // H3 के बाद जोड़ें
     } else {
         chartBox.appendChild(newCanvas);
     }
     
-    // 5. नए Canvas पर Chart बनाएँ (Animation will now definitely run)
-    chart = new Chart(newCanvas, { // newCanvas reference pass करें
+    // 5. नए Canvas पर Chart बनाएँ (SYNTAX ERROR FIXED)
+    chart = new Chart(newCanvas, { 
         type:"doughnut",
-        data:{labels:["Incoming","Outgoing","Missed"],datasets:[{data:[incoming,outgoing,missed],backgroundColor:["#4CAF50","#2196F3","#e63946"]}]()},
+        // datasets के बाद की गलती (extra '()') को हटा दिया गया है
+        data:{labels:["Incoming","Outgoing","Missed"],datasets:[{data:[incoming,outgoing,missed],backgroundColor:["#4CAF50","#2196F3","#e63946"]}]},
         options:{
             responsive:true, 
             maintainAspectRatio: true, 
