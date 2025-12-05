@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Call Dashboard Pro+ v7 (Final Fix & Structure)</title>
+<title>Call Dashboard Pro+ v8 (Final)</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
@@ -74,7 +74,7 @@ body.dark #search {background:#1f1f1f; color:white; border-color:#555;}
 #modeBtn{background:black;color:white;}
 #logoutBtn{background:#e63946;color:white;}
 #refreshBtn{background:#ff9800;color:white;}
-#exportBtn{background:#00bcd4;color:white;} /* Export Button Color */
+#exportBtn{background:#00bcd4;color:white;} 
 
 /* CARDS */
 #cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:15px;margin-bottom:20px;}
@@ -100,9 +100,41 @@ body.dark #search {background:#1f1f1f; color:white; border-color:#555;}
 .filterBtn.active{background:black;color:white;border-color:black;}
 
 /* TABLE */
-table{width:100%;border-collapse:collapse;background:white;border-radius:16px;overflow:hidden;margin-bottom:30px;}
+table{width:100%;border-collapse:collapse;background:white;border-radius:16px;overflow:hidden;margin-bottom:15px;}
 th,td{padding:12px;border-bottom:1px solid #eee;text-align:center;}
 th{background:#fafafa;}
+
+/* Pagination Styles */
+#pagination-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    user-select: none;
+}
+#pagination-controls button {
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    background: white;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+#pagination-controls button:hover:not(.active) {
+    background: #f0f0f0;
+}
+#pagination-controls button.active {
+    background: #2196F3;
+    color: white;
+    border-color: #2196F3;
+    cursor: default;
+}
+#pagination-controls button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
 @media(max-width:600px){
     table,thead,tbody,th,td,tr{display:block;}
     th{display:none;}
@@ -113,9 +145,10 @@ th{background:#fafafa;}
     td:nth-of-type(3):before{content:"Type";}
     td:nth-of-type(4):before{content:"Duration";}
     td:nth-of-type(5):before{content:"Date";}
+    #dateFilter {flex-direction: column; align-items: flex-start;}
 }
 
-/* CHART ALIGNMENT FIX: Use grid for horizontal alignment on large screens */
+/* CHART ALIGNMENT FIX */
 #charts-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); 
@@ -215,6 +248,10 @@ th{background:#fafafa;}
             </thead>
             <tbody id="tbody"></tbody>
         </table>
+        
+        <div id="pagination-controls">
+            </div>
+
     </div>
 
     <div id="dynamic-content" class="hidden-content" style="display: none;">
@@ -229,30 +266,33 @@ if(sessionStorage.getItem("auth")!=="1"){ window.location.href="index.html"; }
 
 // --- GLOBAL VARIABLES ---
 let allData = [];
-let filteredData = []; // To store data filtered by type/date (used for export)
+let filteredData = []; // Data after type/date/search filters (used for stats, charts, and pagination source)
 let chart, monthlyChart;
+
+// Pagination Variables
+let currentPage = 1;
+const rowsPerPage = 10;
 
 const exportBtn = document.getElementById('exportBtn');
 
 
-// --- CORE DATA LOADING (Strictly data.json, No Fallback) ---
+// --- CORE DATA LOADING ---
 async function loadData(){
     try{
-        let res=await fetch("data.json?cache="+Math.random());
+        // Added Math.random() to prevent aggressive caching and fetch fresh data
+        let res=await fetch("data.json?cache="+Math.random()); 
         if(!res.ok) {
-            // Throw error to catch block if data.json is not found
             throw new Error(`Data Load Error: Status ${res.status}`);
         }
         allData = await res.json();
         console.log("data.json loaded successfully.");
     }catch(e){ 
-        // As requested, no dummy data. Data will be empty if load fails.
         allData = []; 
         console.error("Error loading data.json. Call logs will be empty.", e);
-        // You might want an alert here for the user, but keeping it silent for clean experience.
     }
     
     // Always apply filters to update UI based on the loaded (or empty) data
+    currentPage = 1; // Reset to page 1 when new data loads
     applyFilters();
 }
 loadData();
@@ -261,7 +301,6 @@ setInterval(loadData,8000);
 
 // --- 2. LOGOUT FIX (With Confirmation) ---
 document.getElementById("logoutBtn").onclick=()=>{
-    // FIX: Added confirmation dialogue to prevent unwanted behavior/messages
     if(confirm("Are you sure you want to log out?")){
         sessionStorage.removeItem("auth");
         window.location.href="index.html";
@@ -273,7 +312,10 @@ document.getElementById("modeBtn").onclick=()=>{
     document.body.classList.toggle("dark");
     document.getElementById("modeBtn").innerText = document.body.classList.contains("dark")?"Light Mode":"Dark Mode";
 };
-document.getElementById("refreshBtn").onclick=loadData;
+document.getElementById("refreshBtn").onclick=()=>{
+    currentPage = 1; // Reset page on manual refresh
+    loadData();
+};
 
 
 // --- STRUCTURAL & MENU LOGIC FIX ---
@@ -298,23 +340,23 @@ document.querySelectorAll(".menu-item").forEach(item => {
             dashboardContent.style.display = 'block';
         } else if (section === 'calls') {
             callLogsContent.style.display = 'block';
-            exportBtn.style.display = 'inline-flex'; // Show Export button
+            exportBtn.style.display = 'inline-flex'; 
         } else { // profile/settings
             dynamicContent.style.display = 'block';
-            // Set the development message
             dynamicContent.innerHTML = `
                 <h2>${section.toUpperCase()}</h2>
                 <p>Welcome to the ${section} section. This area is **under active development** and features will be available soon!</p>
             `;
         }
         
-        // Re-apply filters to update UI with current data
+        // Always apply filters to ensure stats/charts are updated when navigating to dashboard
+        // and pagination is correctly rendered when navigating to calls
         applyFilters(); 
     };
 });
 
 
-// --- 1. CALL LOGS & FILTERING LOGIC FIX (Ensures calls display when dates are empty) ---
+// --- CALL LOGS & FILTERING LOGIC ---
 function applyFilters() {
     let temp = allData;
 
@@ -325,7 +367,7 @@ function applyFilters() {
         temp = temp.filter(x => x.type === type);
     }
     
-    // 2. Apply Date Filter (Crucial: only filter if date inputs are used)
+    // 2. Apply Date Filter
     const startDate = document.getElementById('startDate').value;
     const endDate = document.getElementById('endDate').value;
     
@@ -344,18 +386,17 @@ function applyFilters() {
         });
     }
     
-    // Update global filtered data (used for export)
-    filteredData = temp;
-
     // 3. Apply Search Filter
     const q = document.getElementById("search").value.toLowerCase();
-    const searchedData = temp.filter(x => x.number.toLowerCase().includes(q) || x.name.toLowerCase().includes(q));
+    filteredData = temp.filter(x => x.number.toLowerCase().includes(q) || x.name.toLowerCase().includes(q));
 
     // Update UI components with the final filtered/searched data
-    updateStats(searchedData); 
-    updateChart(searchedData);
-    updateMonthlyChart(searchedData);
-    updateTable(searchedData);
+    updateStats(filteredData); 
+    updateChart(filteredData);
+    updateMonthlyChart(filteredData);
+    
+    // Update table and pagination
+    changePage(currentPage);
 }
 
 // Attach consolidated event listeners
@@ -363,21 +404,30 @@ document.querySelectorAll(".filterBtn").forEach(btn => {
     btn.onclick = () => {
         document.querySelectorAll(".filterBtn").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
+        currentPage = 1; // Reset to page 1 on filter change
         applyFilters();
     };
 });
 
-document.getElementById('startDate').onchange = applyFilters;
-document.getElementById('endDate').onchange = applyFilters;
-document.getElementById('search').onkeyup = applyFilters; 
+document.getElementById('startDate').onchange = () => { currentPage = 1; applyFilters(); };
+document.getElementById('endDate').onchange = () => { currentPage = 1; applyFilters(); };
+document.getElementById('search').onkeyup = () => { currentPage = 1; applyFilters(); };
 
 
-// --- UTILITY FUNCTIONS ---
-function updateStats(d){
-    document.getElementById("totalCalls").innerText=d.length;
-    document.getElementById("missedCalls").innerText=d.filter(x=>x.type==="missed").length;
-    let today=new Date().toISOString().slice(0,10);
-    document.getElementById("todayCalls").innerText=d.filter(x=>x.date.includes(today)).length;
+// --- PAGINATION & TABLE LOGIC (NEW) ---
+
+function changePage(page) {
+    currentPage = page;
+    const data = filteredData.slice().reverse(); // Show newest calls first
+
+    const start = (page - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+    
+    // Get only the 10 rows for the current page
+    const paginatedItems = data.slice(start, end); 
+
+    updateTable(paginatedItems); 
+    renderPagination(data.length, currentPage);
 }
 
 function updateTable(data){
@@ -387,7 +437,8 @@ function updateTable(data){
         tb.innerHTML = '<tr><td colspan="5">No calls found. Please ensure data.json is present or adjust filters.</td></tr>';
         return;
     }
-    data.slice().reverse().forEach(c=>{
+    // Only display the paginated data
+    data.forEach(c=>{
         tb.innerHTML+=`<tr>
             <td>${c.number}</td>
             <td>${c.name}</td>
@@ -398,16 +449,72 @@ function updateTable(data){
     });
 }
 
-// --- CHART FUNCTIONS (Unchanged) ---
+function renderPagination(totalRows, currentPage) {
+    const paginationEl = document.getElementById("pagination-controls");
+    paginationEl.innerHTML = '';
+    
+    const pageCount = Math.ceil(totalRows / rowsPerPage);
+
+    if (pageCount <= 1) return; // Hide pagination if only one page
+
+    // Previous Button
+    const prevBtn = document.createElement('button');
+    prevBtn.innerHTML = '<i class="fa fa-angle-left"></i> Previous';
+    prevBtn.disabled = currentPage === 1;
+    prevBtn.onclick = () => changePage(currentPage - 1);
+    paginationEl.appendChild(prevBtn);
+
+    // Page Number Buttons (Limit to show a manageable range)
+    const maxButtons = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+    let endPage = Math.min(pageCount, startPage + maxButtons - 1);
+
+    if (endPage - startPage + 1 < maxButtons) {
+        startPage = Math.max(1, endPage - maxButtons + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+        const btn = document.createElement('button');
+        btn.innerText = i;
+        btn.classList.add('page-num');
+        if (i === currentPage) {
+            btn.classList.add('active');
+        }
+        btn.onclick = () => changePage(i);
+        paginationEl.appendChild(btn);
+    }
+    
+    // Next Button
+    const nextBtn = document.createElement('button');
+    nextBtn.innerHTML = 'Next <i class="fa fa-angle-right"></i>';
+    nextBtn.disabled = currentPage === pageCount;
+    nextBtn.onclick = () => changePage(currentPage + 1);
+    paginationEl.appendChild(nextBtn);
+}
+
+// --- CHART FUNCTIONS (ANIMATION FIX) ---
 function updateChart(data){
     let incoming=data.filter(x=>x.type==="incoming").length;
     let outgoing=data.filter(x=>x.type==="outgoing").length;
     let missed=data.filter(x=>x.type==="missed").length;
-    if(chart) chart.destroy();
+    
+    // FIX: Destroying the old chart ensures the animation runs again (nachna)
+    if(chart) chart.destroy(); 
+    
     chart=new Chart(document.getElementById("chart"),{
         type:"doughnut",
         data:{labels:["Incoming","Outgoing","Missed"],datasets:[{data:[incoming,outgoing,missed],backgroundColor:["#4CAF50","#2196F3","#e63946"]}]},
-        options:{responsive:true, maintainAspectRatio: true, aspectRatio: 1, plugins:{legend:{position:"bottom"}}}
+        options:{
+            responsive:true, 
+            maintainAspectRatio: true, 
+            aspectRatio: 1, 
+            plugins:{legend:{position:"bottom"}},
+            // Animation configuration to ensure the chart "nach raha hai" (is dancing)
+            animation: {
+                duration: 1000, // 1 second animation
+                easing: 'easeOutQuart'
+            }
+        }
     });
 }
 
@@ -420,18 +527,36 @@ function updateMonthlyChart(data){
     monthlyChart=new Chart(document.getElementById("monthChart"),{
         type:"bar",
         data:{labels,datasets:[{label:"Monthly Calls",data:values,backgroundColor:"#2196F3"}]},
-        options:{responsive:true, maintainAspectRatio: true, aspectRatio: 1, plugins:{legend:{display:false}}}
+        options:{
+            responsive:true, 
+            maintainAspectRatio: true, 
+            aspectRatio: 1, 
+            plugins:{legend:{display:false}},
+            animation: {
+                duration: 800, 
+                easing: 'easeOutQuart'
+            }
+        }
     });
 }
 
-// --- EXPORT TO CSV FUNCTION (Activated in Call Logs section) ---
+// --- OTHER UTILITY FUNCTIONS ---
+function updateStats(d){
+    document.getElementById("totalCalls").innerText=d.length;
+    document.getElementById("missedCalls").innerText=d.filter(x=>x.type==="missed").length;
+    let today=new Date().toISOString().slice(0,10);
+    document.getElementById("todayCalls").innerText=d.filter(x=>x.date.includes(today)).length;
+}
+
+// --- EXPORT TO CSV FUNCTION ---
 document.getElementById("exportBtn").onclick = () => {
-    const data = filteredData; // Use the data filtered by type/date
+    // Export button will export the filtered (but not paginated) data
+    const data = filteredData; 
     if (data.length === 0) {
         alert("No data to export.");
         return;
     }
-
+    // ... (rest of the CSV export logic is same as before)
     const headers = ["Number", "Name", "Type", "Duration", "Date"];
     const rows = [headers.join(',')];
 
@@ -448,7 +573,6 @@ document.getElementById("exportBtn").onclick = () => {
     });
 
     const csvContent = rows.join('\n');
-    
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
     if (link.download !== undefined) { 
@@ -465,7 +589,7 @@ document.getElementById("exportBtn").onclick = () => {
 };
 
 
-// LIVE WEBHOOK (Keeping your original logic)
+// LIVE WEBHOOK (Ensures real-time updates)
 try{
     const stream=new EventSource("https://your-proxy-endpoint/webhook");
     stream.onmessage=e=>pushWebhook(JSON.parse(e.data));
@@ -477,6 +601,7 @@ async function pushWebhook(data){
 
 // Initial setup to display Dashboard on load
 document.addEventListener('DOMContentLoaded', () => {
+    // Click dashboard to initialize the view and run the first chart animation
     document.querySelector('.menu-item[data-section="dashboard"]').click();
 });
 </script>
