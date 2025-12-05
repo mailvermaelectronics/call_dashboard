@@ -321,14 +321,14 @@ document.getElementById("modeBtn").onclick=()=>{
     document.getElementById("modeBtn").innerText = document.body.classList.contains("dark")?"Light Mode":"Dark Mode";
 };
 
-// Reset page to 1 on manual refresh
+// Reset page to 1 on manual refresh (Refresh button calls loadData which forces animation)
 document.getElementById("refreshBtn").onclick=()=>{
     currentPage = 1; 
     loadData();
 };
 
 
-// --- STRUCTURAL & MENU LOGIC FIX ---
+// --- STRUCTURAL & MENU LOGIC FIX (DASHBOARD CLICK FIX APPLIED HERE) ---
 document.querySelectorAll(".menu-item").forEach(item => {
     item.onclick = () => {
         document.querySelectorAll(".menu-item").forEach(i => i.classList.remove("active"));
@@ -348,6 +348,12 @@ document.querySelectorAll(".menu-item").forEach(item => {
         // Show relevant section
         if (section === 'dashboard') {
             dashboardContent.style.display = 'block';
+            // **FIX for Nachna**: Directly call chart updates with current data to force animation 
+            // This runs even if the dashboard is already active.
+            if(filteredData.length > 0) { // Safety check
+                updateChart(filteredData);
+                updateMonthlyChart(filteredData);
+            }
         } else if (section === 'calls') {
             callLogsContent.style.display = 'block';
             exportBtn.style.display = 'inline-flex'; 
@@ -546,7 +552,7 @@ function updateChart(data){
             maintainAspectRatio: true, 
             aspectRatio: 1, 
             plugins:{legend:{position:"bottom"}},
-            animation: {
+            animation: { // <--- यह है वह Animation जो इसे नचाता है
                 duration: 1000, 
                 easing: 'easeOutQuart'
             }
@@ -568,7 +574,7 @@ function updateMonthlyChart(data){
             maintainAspectRatio: true, 
             aspectRatio: 1, 
             plugins:{legend:{display:false}},
-            animation: {
+            animation: { // <--- यह भी एनिमेट होगा
                 duration: 800, 
                 easing: 'easeOutQuart'
             }
