@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📞 Call Dashboard Pro+ v2</title>
+<title>Call Dashboard Pro+ v5 (data.json Fix)</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
@@ -117,7 +117,7 @@ th{background:#fafafa;}
 /* CHART ALIGNMENT FIX: Use grid for horizontal alignment on large screens */
 #charts-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); /* Use minmax for responsiveness */
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); 
     gap: 20px;
     margin-top: 20px;
     justify-content: center;
@@ -128,7 +128,6 @@ th{background:#fafafa;}
     border-radius:20px;
     padding:25px;
     box-shadow:0 5px 25px rgba(0,0,0,0.1);
-    /* Removed max-width here, let grid handle the sizing */
     width: 100%;
 }
 #chartBox canvas{max-width:100% !important;height:auto !important;}
@@ -243,9 +242,7 @@ document.getElementById('modeBtn').onclick = function() {
 
 document.getElementById('logoutBtn').onclick = function() {
     if (confirm("Are you sure you want to log out?")) {
-        // Here you would add your actual logout logic (e.g., redirect to login page)
-        alert("Logged out successfully! (In a real app, you would be redirected.)");
-        // Example: window.location.href = '/login';
+        alert("Logged out successfully!");
     }
 };
 
@@ -279,7 +276,7 @@ document.querySelectorAll(".menu-item").forEach(item => {
             callLogsSection.style.display = 'block';
             exportBtn.style.display = 'inline-flex'; // Show Export button in Call Logs
             document.getElementById('search').disabled = false;
-            applyFilters(); // Show all calls by default
+            applyFilters(); 
         } else { // Profile or Settings
             dynamicContent.style.display = 'block';
             // DEVELOPMENT MESSAGE
@@ -292,28 +289,34 @@ document.querySelectorAll(".menu-item").forEach(item => {
     };
 });
 
-// --- CORE DATA LOADING (Dummy Data Removed) ---
+// --- CORE DATA LOADING FIX (Reverting to data.json fetch) ---
 async function loadData() {
     try {
-        let res = await fetch("data.json?cache=" + Math.random());
+        // Fetch data.json from the same directory
+        let res = await fetch("data.json?cache=" + new Date().getTime()); 
+        
         if (!res.ok) {
-            throw new Error('Could not load data.json. Status: ' + res.status);
+            // Throw an error if the file is not found (404) or other network error occurs
+            throw new Error(`Data Load Error: Could not load data.json. Status: ${res.status}. Make sure the file exists in the same folder.`);
         }
+        
         allData = await res.json();
-        console.log("Data loaded successfully.");
+        console.log("data.json loaded successfully.");
+        
     } catch (e) {
-        console.error("Data Load Error: Failed to load data.json. Please ensure the file is present. ", e.message);
+        console.error("Data Load FAILED. Check console for error details.", e);
+        // If loading fails, clear existing data and display no results
         allData = []; 
+        alert("Error loading call data! Please ensure data.json file is present and correctly formatted.");
     }
     
-    // Rerun filter after loading/reloading data
+    // Rerun filter after attempting to load data
     applyFilters(); 
 }
 loadData(); 
-// setInterval(loadData, 8000); // Re-enable for auto-refresh if needed
 
 
-// --- 2. CALL LOGS/FILTERING LOGIC FIX ---
+// --- CALL LOGS/FILTERING LOGIC FIX ---
 function applyFilters() {
     let temp = allData;
 
@@ -324,11 +327,10 @@ function applyFilters() {
         temp = temp.filter(x => x.type === type);
     }
 
-    // 2. Apply Date Filter (Only filter if BOTH inputs are used, otherwise show all)
+    // 2. Apply Date Filter 
     const startDate = document.getElementById('startDate').value;
     const endDate = document.getElementById('endDate').value;
     
-    // FIX: Only filter by date if at least one input has a value
     if (startDate || endDate) {
         temp = temp.filter(x => {
             const dataDate = x.date.split('T')[0];
