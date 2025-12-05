@@ -195,8 +195,8 @@ th{background:#fafafa;}
 
 <div id="sidebar">
     <h2>📞 Dashboard Pro+</h2>
-    <div class="menu-item active" data-section="dashboard"><i class="fa fa-chart-line"></i> Dashboard</div>
-    <div class="menu-item" data-section="calls"><i class="fa fa-phone"></i> Call Logs</div>
+    <div class="menu-item" data-section="dashboard"><i class="fa fa-chart-line"></i> Dashboard</div>
+    <div class="menu-item active" data-section="calls"><i class="fa fa-phone"></i> Call Logs</div>
     <div class="menu-item" data-section="profile"><i class="fa fa-user"></i> Profile</div>
     <div class="menu-item" data-section="settings"><i class="fa fa-gear"></i> Settings</div>
 </div>
@@ -232,7 +232,7 @@ th{background:#fafafa;}
         </div>
     </div>
     
-    <div id="call-logs-content" class="section-content" style="display: none;">
+    <div id="call-logs-content" class="section-content"> 
          <div id="filters-row">
             <div id="filters">
                 <button class="filterBtn active" data-type="all">All</button>
@@ -242,9 +242,9 @@ th{background:#fafafa;}
             </div>
             <div id="dateFilter">
                 <label for="startDate">Date From:</label>
-                <input type="date" id="startDate">
+                <input type="text" id="startDate" placeholder="DD/MM/YYYY" maxlength="10" oninput="autoFormatDate(this)">
                 <label for="endDate">To:</label>
-                <input type="date" id="endDate">
+                <input type="text" id="endDate" placeholder="DD/MM/YYYY" maxlength="10" oninput="autoFormatDate(this)">
             </div>
         </div>
 
@@ -287,6 +287,85 @@ const rowsPerPage = 10;
 
 const exportBtn = document.getElementById('exportBtn');
 
+// --- UTILITY FUNCTIONS FOR DATE FORMATTING AND AUTO-JUMP ---
+
+/**
+ * Handles automatic insertion of '/' and triggers filter when DD/MM/YYYY is complete.
+ */
+function autoFormatDate(input) {
+    let value = input.value.replace(/[^0-9]/g, ''); // Remove non-digits
+    
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    const len = input.value.length;
+
+    let newValue = value;
+
+    if (value.length > 2) {
+        newValue = value.substring(0, 2) + '/' + value.substring(2);
+    }
+    if (value.length > 4) {
+        newValue = newValue.substring(0, 5) + '/' + newValue.substring(5);
+    }
+    
+    if (newValue.length > 10) {
+        newValue = newValue.substring(0, 10);
+    }
+
+    input.value = newValue;
+    
+    let newCursorPos = start;
+
+    if (len === 2 && input.value.length === 3) {
+        newCursorPos = 3;
+    }
+    else if (len === 5 && input.value.length === 6) {
+        newCursorPos = 6;
+    }
+    else if (start === len) {
+        newCursorPos = input.value.length;
+    }
+    
+    if (newCursorPos > input.value.length) {
+        newCursorPos = input.value.length;
+    }
+
+    window.requestAnimationFrame(() => {
+        input.setSelectionRange(newCursorPos, newCursorPos);
+    });
+    
+    if (input.value.length === 10) {
+        currentPage = 1;
+        applyFilters();
+    }
+}
+
+
+/**
+ * Parses a date string in DD/MM/YYYY format to YYYY-MM-DD for comparison.
+ */
+function parseDateForFilter(dateString) {
+    if (!dateString) return null;
+    const parts = dateString.trim().split('/');
+    if (parts.length === 3 && parts[0].length <= 2 && parts[1].length <= 2 && parts[2].length === 4) {
+        const [day, month, year] = parts;
+        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    }
+    return null; 
+}
+
+/**
+ * Formats a date string (from data: YYYY-MM-DDTHH:MM:SS) to DD/MM/YYYY for the table.
+ */
+function formatDateForTable(isoDate) {
+    if (!isoDate) return '';
+    const datePart = isoDate.split('T')[0]; // YYYY-MM-DD
+    const parts = datePart.split('-');
+    if (parts.length === 3) {
+        return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+    return datePart;
+}
 
 // --- CORE DATA LOADING ---
 async function loadData(){
@@ -321,14 +400,14 @@ document.getElementById("modeBtn").onclick=()=>{
     document.getElementById("modeBtn").innerText = document.body.classList.contains("dark")?"Light Mode":"Dark Mode";
 };
 
-// Reset page to 1 on manual refresh (Refresh button calls loadData which forces animation)
+// ** Refresh Button FIX: Calls loadData, which calls applyFilters, which updates charts **
 document.getElementById("refreshBtn").onclick=()=>{
     currentPage = 1; 
     loadData();
 };
 
 
-// --- STRUCTURAL & MENU LOGIC FIX (DASHBOARD CLICK FIX APPLIED HERE) ---
+// --- STRUCTURAL & MENU LOGIC (CLEANED UP) ---
 document.querySelectorAll(".menu-item").forEach(item => {
     item.onclick = () => {
         document.querySelectorAll(".menu-item").forEach(i => i.classList.remove("active"));
@@ -348,12 +427,9 @@ document.querySelectorAll(".menu-item").forEach(item => {
         // Show relevant section
         if (section === 'dashboard') {
             dashboardContent.style.display = 'block';
-            // **FIX for Nachna**: Directly call chart updates with current data to force animation 
-            // This runs even if the dashboard is already active.
-            if(filteredData.length > 0) { // Safety check
-                updateChart(filteredData);
-                updateMonthlyChart(filteredData);
-            }
+            exportBtn.style.display = 'none';
+            // Chart updates will be handled by the applyFilters() call below 
+            // after the section display is set to 'block'.
         } else if (section === 'calls') {
             callLogsContent.style.display = 'block';
             exportBtn.style.display = 'inline-flex'; 
@@ -365,6 +441,7 @@ document.querySelectorAll(".menu-item").forEach(item => {
             `;
         }
         
+        // ** Centralized logic for updating stats and charts **
         applyFilters(); 
     };
 });
@@ -382,19 +459,22 @@ function applyFilters() {
     }
     
     // 2. Apply Date Filter
-    const startDate = document.getElementById('startDate').value;
-    const endDate = document.getElementById('endDate').value;
+    const rawStartDate = document.getElementById('startDate').value;
+    const rawEndDate = document.getElementById('endDate').value;
     
-    if (startDate || endDate) {
+    const filterStartDate = parseDateForFilter(rawStartDate);
+    const filterEndDate = parseDateForFilter(rawEndDate);
+    
+    if (filterStartDate || filterEndDate) {
         temp = temp.filter(x => {
-            const dataDate = x.date.split('T')[0]; 
+            const dataDate = x.date.split('T')[0];
             
-            if (startDate && endDate) {
-                return dataDate >= startDate && dataDate <= endDate;
-            } else if (startDate) {
-                return dataDate >= startDate;
-            } else if (endDate) {
-                return dataDate <= endDate;
+            if (filterStartDate && filterEndDate) {
+                return dataDate >= filterStartDate && dataDate <= filterEndDate;
+            } else if (filterStartDate) {
+                return dataDate >= filterStartDate;
+            } else if (filterEndDate) {
+                return dataDate <= filterEndDate;
             }
             return true; 
         });
@@ -406,8 +486,12 @@ function applyFilters() {
 
     // Update UI components with the final filtered/searched data
     updateStats(filteredData); 
-    updateChart(filteredData); // Chart updates here
-    updateMonthlyChart(filteredData);
+    
+    // ** CHART UPDATE: Only update charts if Dashboard is currently visible to trigger animation **
+    if(document.getElementById('dashboard-content').style.display !== 'none') {
+        updateChart(filteredData); 
+        updateMonthlyChart(filteredData);
+    }
     
     changePage(currentPage);
 }
@@ -459,7 +543,7 @@ function updateTable(data){
             <td>${c.name}</td>
             <td>${c.type}</td>
             <td>${c.duration}</td>
-            <td>${c.date.split('T')[0]}</td>
+            <td>${formatDateForTable(c.date)}</td> 
         </tr>`;
     });
 }
@@ -507,22 +591,19 @@ function renderPagination(totalRows, currentPage) {
     paginationEl.appendChild(nextBtn);
 }
 
-// --- CHART FUNCTIONS (PERMANENT ANIMATION FIX AND SYNTAX ERROR FIX) ---
+// --- CHART FUNCTIONS (ANIMATION CONFIGURATION) ---
 function updateChart(data){
     let incoming=data.filter(x=>x.type==="incoming").length;
     let outgoing=data.filter(x=>x.type==="outgoing").length;
     let missed=data.filter(x=>x.type==="missed").length;
     
-    // Chart Container जहाँ Doughnut Chart रहता है (पहला #chartBox)
     const chartBox = document.querySelector('#charts-container > #chartBox:first-child'); 
     
-    // FIX 1: Safety check to prevent crashing if the element is not found
     if (!chartBox) return;
     
-    // 2. पुराने Canvas को DOM से हटा दें
+    // पुराने चार्ट को नष्ट और कैनवस को हटाना
     let oldCanvas = document.getElementById('chart');
     if (oldCanvas) {
-        // 1. अगर पुराना Chart Object मौजूद है, तो उसे नष्ट करें (Destroy before removing element)
         if(chart) {
             chart.destroy();
             chart = null; 
@@ -530,43 +611,63 @@ function updateChart(data){
         oldCanvas.remove();
     }
     
-    // 3. एक नया Canvas Element बनाएँ
+    // नया कैनवस बनाना
     const newCanvas = document.createElement('canvas');
-    newCanvas.id = 'chart'; // ID वही रखें
+    newCanvas.id = 'chart'; 
     
-    // 4. नए Canvas को ChartBox में जोड़ें (H3 के बाद)
     const h3 = chartBox.querySelector('h3');
     if (h3) {
-        h3.after(newCanvas); // H3 के बाद जोड़ें
+        h3.after(newCanvas); 
     } else {
         chartBox.appendChild(newCanvas);
     }
     
-    // 5. नए Canvas पर Chart बनाएँ (SYNTAX ERROR FIXED)
     chart = new Chart(newCanvas, { 
         type:"doughnut",
-        // datasets के बाद की गलती (extra '()') को हटा दिया गया है
         data:{labels:["Incoming","Outgoing","Missed"],datasets:[{data:[incoming,outgoing,missed],backgroundColor:["#4CAF50","#2196F3","#e63946"]}]},
         options:{
             responsive:true, 
             maintainAspectRatio: true, 
             aspectRatio: 1, 
             plugins:{legend:{position:"bottom"}},
-            animation: { // <--- यह है वह Animation जो इसे नचाता है
-                duration: 1000, 
-                easing: 'easeOutQuart'
-            }
+            // ** एनिमेशन सेटिंग्स **
+            animation: { 
+                duration: 1200, 
+                easing: 'easeOutQuart',
+                animateRotate: true, // स्पिन इफ़ेक्ट के लिए
+                animateScale: false 
+            },
+            rotation: -90, 
+            circumference: 360 
         }
     });
 }
 
 function updateMonthlyChart(data){
     let months={};
-    data.forEach(x=>{let m=x.date.slice(0,7); months[m]=(months[m]||0)+1;});
+    data.forEach(x=>{let m=x.date.slice(0,7); months[m]=(months[m]||0)+1;}); 
     let labels=Object.keys(months).sort();
     let values=labels.map(k=>months[k]);
-    if(monthlyChart) monthlyChart.destroy();
-    monthlyChart=new Chart(document.getElementById("monthChart"),{
+    
+    const chartBox = document.querySelector('#charts-container > #chartBox:last-child');
+    if (!chartBox) return;
+
+    // पुराने चार्ट को नष्ट और कैनवस को हटाना
+    let oldCanvas = document.getElementById('monthChart');
+    if (oldCanvas) {
+        if(monthlyChart) {
+            monthlyChart.destroy();
+            monthlyChart = null; 
+        }
+        oldCanvas.remove();
+    }
+
+    // नया कैनवस बनाना
+    const newCanvas = document.createElement('canvas');
+    newCanvas.id = 'monthChart'; 
+    chartBox.appendChild(newCanvas);
+
+    monthlyChart=new Chart(newCanvas,{
         type:"bar",
         data:{labels,datasets:[{label:"Monthly Calls",data:values,backgroundColor:"#2196F3"}]},
         options:{
@@ -574,8 +675,9 @@ function updateMonthlyChart(data){
             maintainAspectRatio: true, 
             aspectRatio: 1, 
             plugins:{legend:{display:false}},
-            animation: { // <--- यह भी एनिमेट होगा
-                duration: 800, 
+            // ** एनिमेशन सेटिंग्स **
+            animation: { 
+                duration: 1000, 
                 easing: 'easeOutQuart'
             }
         }
@@ -607,7 +709,7 @@ document.getElementById("exportBtn").onclick = () => {
             item.name,
             item.type,
             item.duration,
-            item.date.split('T')[0] 
+            formatDateForTable(item.date) 
         ].map(d => `"${d}"`).join(','); 
 
         rows.push(row);
@@ -640,9 +742,10 @@ async function pushWebhook(data){
     applyFilters(); 
 }
 
-// Initial setup to display Dashboard on load
+// Initial setup to display Call Logs on load (MODIFIED)
 document.addEventListener('DOMContentLoaded', () => {
-    document.querySelector('.menu-item[data-section="dashboard"]').click();
+    // यह सुनिश्चित करता है कि Call Logs डिफ़ॉल्ट रूप से सक्रिय रहे
+    document.querySelector('.menu-item[data-section="calls"]').click(); 
 });
 </script>
 </body>
