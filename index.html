@@ -64,9 +64,11 @@
     transition:border-color 0.3s, box-shadow 0.3s;
     font-size:16px;
     color:#374151;
+    box-sizing: border-box; /* IMPORTANT for container sizing */
   }
+  /* Focus color matches the blue button color (#2563eb) */
   input:focus{
-    border-color:#2563eb;
+    border-color:#2563eb; 
     outline:none;
     box-shadow:0 0 0 3px rgba(37, 99, 235, 0.2);
   }
@@ -74,24 +76,20 @@
   /* Password Container: To hold both input and toggle button */
   .password-container {
     position: relative;
-    /* This makes the container act like the input field itself, 
-       ensuring proper spacing between inputs. */
     margin-top: 15px; 
   }
   
-  /* Password Input inside the container */
+  /* Password Input inside the container (resets width and padding) */
   .password-container input {
-    margin-top: 0; /* Remove redundant margin */
-    /* Adjust width and padding to make space for the toggle button inside the border */
+    margin-top: 0; 
     width: 100%; 
-    padding-right: 45px; /* Enough space for the icon and padding */
-    box-sizing: border-box; /* Include padding/border in the element's total width/height */
+    padding-right: 45px; /* Space for the icon */
   }
   
   /* Toggle Button Styling (Positioned absolutely inside the container) */
   .toggle-password {
     position: absolute;
-    right: 5px; /* Adjust spacing from the right border */
+    right: 5px; 
     top: 50%;
     transform: translateY(-50%);
     background: none;
@@ -113,11 +111,11 @@
       'wght' 400,
       'GRAD' 0,
       'opsz' 24;
-    font-size: 24px; /* Icon size */
+    font-size: 24px; 
   }
   
   /* Button Styling */
-  button[onclick="login()"]{
+  button[type="submit"], button[onclick="login()"] { /* Targets the login button */
     width:100%;
     padding:14px;
     margin-top:25px;
@@ -130,7 +128,7 @@
     font-size:16px;
     transition:background-color 0.3s, box-shadow 0.3s;
   }
-  button[onclick="login()"]:hover{
+  button[type="submit"]:hover, button[onclick="login()"]:hover{
     background:#1d4ed8;
     box-shadow:0 4px 15px rgba(37, 99, 235, 0.3);
   }
@@ -162,20 +160,22 @@
   </div>
 
   <h2>📞 Dashboard Login</h2>
-
-  <div id="loginBox">
-    <input id="username" placeholder="Username" autocomplete="username">
-    
-    <div class="password-container">
-      <input id="password" type="password" placeholder="Password" autocomplete="current-password">
-      <button type="button" class="toggle-password" onclick="togglePasswordVisibility()">
-        <span id="toggleIcon" class="material-symbols-outlined">visibility_off</span>
-      </button>
+  
+  <form id="loginForm" onsubmit="login(event)">
+    <div id="loginBox">
+      <input id="username" placeholder="Username" autocomplete="username" required>
+      
+      <div class="password-container">
+        <input id="password" type="password" placeholder="Password" autocomplete="current-password" required>
+        <button type="button" class="toggle-password" onclick="togglePasswordVisibility()">
+          <span id="toggleIcon" class="material-symbols-outlined">visibility_off</span>
+        </button>
+      </div>
+      
+      <button type="submit">Secure Login</button>
+      <div class="muted">Enter correct username & password to access the secure dashboard.</div>
     </div>
-    
-    <button onclick="login()">Secure Login</button>
-    <div class="muted">Enter correct username & password to access the secure dashboard.</div>
-  </div>
+  </form>
 
   <div id="msg"></div>
 
@@ -204,7 +204,7 @@ function msg(text, bad=false){
   m.innerText = text;
 }
 
-// Function to toggle password visibility (Updated for Google Material Icons)
+// Function to toggle password visibility 
 function togglePasswordVisibility() {
   const passwordInput = document.getElementById('password');
   const toggleIcon = document.getElementById('toggleIcon');
@@ -221,15 +221,20 @@ function togglePasswordVisibility() {
 }
 
 
-// login function (NO OTP)
-async function login(){
+// login function (Updated to accept event object)
+async function login(event){
+  // Prevent default form submission behavior (which causes page reload)
+  if (event) {
+    event.preventDefault();
+  }
+
   msg("");
 
   const u = document.getElementById("username").value.trim();
   const p = document.getElementById("password").value;
 
   // Disable button during process
-  const loginButton = document.querySelector('button[onclick="login()"]');
+  const loginButton = document.querySelector('button[type="submit"]');
   loginButton.disabled = true;
 
   if(!u || !p){ 
