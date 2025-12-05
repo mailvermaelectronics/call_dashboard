@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Call Dashboard Pro+ v10 (Final Chart Fix)</title>
+<title>Call Dashboard Pro+ v11 (Chart Animation Guaranteed)</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
@@ -222,8 +222,7 @@ th{background:#fafafa;}
         <div id="charts-container">
             <div id="chartBox">
                 <h3>Call Type Distribution</h3>
-                <div id="doughnut-container">
-                    </div>
+                <canvas id="chart"></canvas> 
             </div>
 
             <div id="chartBox">
@@ -508,26 +507,38 @@ function updateChart(data){
     let outgoing=data.filter(x=>x.type==="outgoing").length;
     let missed=data.filter(x=>x.type==="missed").length;
     
-    const container = document.getElementById('doughnut-container');
+    // Chart Container जहाँ Doughnut Chart रहता है (पहला #chartBox)
+    const chartBox = document.querySelector('#charts-container > #chartBox:first-child'); 
     
-    // 1. Existing chart ko destroy karein (agar chart object exist karta hai)
+    // 1. अगर पुराना Chart Object मौजूद है, तो उसे नष्ट करें।
     if(chart) {
         chart.destroy();
-        chart = null; // Chart reference clear karein
+        chart = null; 
     }
 
-    // 2. Container ke andar ke saare elements ko saaf karein
-    container.innerHTML = '';
+    // 2. पुराने Canvas को DOM से हटा दें (पुराने 'chart' id वाले canvas को)
+    let oldCanvas = document.getElementById('chart');
+    if (oldCanvas) {
+        oldCanvas.remove();
+    }
     
-    // 3. Naya canvas element banaen
+    // 3. एक नया Canvas Element बनाएँ
     const newCanvas = document.createElement('canvas');
-    newCanvas.id = 'chart';
-    container.appendChild(newCanvas);
+    newCanvas.id = 'chart'; // ID वही रखें
     
-    // 4. Naye canvas par chart banaen (Animation will now definitely run)
-    chart=new Chart(newCanvas,{
+    // 4. नए Canvas को ChartBox में जोड़ें (H3 के बाद जोड़ने के लिए)
+    // H3 के बाद जोड़ने के लिए, H3 के बाद insert करें।
+    const h3 = chartBox.querySelector('h3');
+    if (h3) {
+        h3.after(newCanvas);
+    } else {
+        chartBox.appendChild(newCanvas);
+    }
+    
+    // 5. नए Canvas पर Chart बनाएँ (Animation will now definitely run)
+    chart = new Chart(newCanvas, { // newCanvas reference pass करें
         type:"doughnut",
-        data:{labels:["Incoming","Outgoing","Missed"],datasets:[{data:[incoming,outgoing,missed],backgroundColor:["#4CAF50","#2196F3","#e63946"]}]},
+        data:{labels:["Incoming","Outgoing","Missed"],datasets:[{data:[incoming,outgoing,missed],backgroundColor:["#4CAF50","#2196F3","#e63946"]}]()},
         options:{
             responsive:true, 
             maintainAspectRatio: true, 
