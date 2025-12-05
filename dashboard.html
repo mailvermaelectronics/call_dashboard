@@ -3,21 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Call Dashboard Pro+ v5 (data.json Fix)</title>
+<title>Call Dashboard Pro+ v7 (Final Fix & Structure)</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-/* --- CSS: Button Size Fix & General Styles --- */
+/* --- BASE & GLOBAL STYLES --- */
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:Inter,sans-serif;background:#f4f4f8;transition:0.3s;}
-/* DARK MODE CSS FIX */
+
+/* --- DARK MODE FIXES --- */
 body.dark{background:#111;color:#fff;}
-body.dark #sidebar, body.dark .card, body.dark #dateFilter, body.dark table, body.dark #chartBox, body.dark .hidden-content {background:#1b1b1b; color:#fff;}
+body.dark #sidebar, body.dark .card, body.dark table, body.dark #chartBox, body.dark .filterBtn, body.dark #dateFilter, body.dark .hidden-content {background:#1b1b1b; color:#fff;}
 body.dark #modeBtn{background:white;color:black;}
 body.dark .menu-item:hover{background:#222;}
-body.dark .filterBtn{background:#1f1f1f;color:white;border-color:#444;}
+body.dark .filterBtn{border-color:#444;}
 body.dark th,body.dark td{border-color:#333;}
 body.dark th{background:#222;}
+body.dark #dateFilter input{background:#333;color:white;border-color:#555;}
+body.dark #search {background:#1f1f1f; color:white; border-color:#555;}
 
 /* SIDEBAR */
 #sidebar{
@@ -54,8 +57,7 @@ body.dark th{background:#222;}
     gap: 10px; 
     align-items: center;
 }
-
-/* BUTTON SIZE FIX: Apply consistent styling to all action buttons */
+/* BUTTON STYLE FIX (Export button added) */
 #modeBtn, #logoutBtn, #refreshBtn, #exportBtn{
     padding: 10px 16px;
     font-size: 14px; 
@@ -72,7 +74,7 @@ body.dark th{background:#222;}
 #modeBtn{background:black;color:white;}
 #logoutBtn{background:#e63946;color:white;}
 #refreshBtn{background:#ff9800;color:white;}
-#exportBtn{background:#00bcd4;color:white;}
+#exportBtn{background:#00bcd4;color:white;} /* Export Button Color */
 
 /* CARDS */
 #cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:15px;margin-bottom:20px;}
@@ -80,7 +82,7 @@ body.dark th{background:#222;}
 .card h3{margin:0;font-size:15px;opacity:0.8;}
 .card .value{font-size:28px;font-weight:700;margin-top:8px;text-align:center;}
 
-/* FILTERS & DATE FILTER */
+/* FILTERS ROW (Combined Type and Date) */
 #filters-row{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:15px;margin-bottom:20px;}
 #filters{display:flex;flex-wrap:wrap;gap:10px;} 
 #dateFilter{
@@ -98,7 +100,6 @@ body.dark th{background:#222;}
 .filterBtn.active{background:black;color:white;border-color:black;}
 
 /* TABLE */
-#call-logs-table{display:none;} 
 table{width:100%;border-collapse:collapse;background:white;border-radius:16px;overflow:hidden;margin-bottom:30px;}
 th,td{padding:12px;border-bottom:1px solid #eee;text-align:center;}
 th{background:#fafafa;}
@@ -143,7 +144,6 @@ th{background:#fafafa;}
     font-size: 20px;
     font-weight: 600;
 }
-
 </style>
 </head>
 <body>
@@ -167,7 +167,7 @@ th{background:#fafafa;}
         </div>
     </div>
     
-    <div id="dashboard-content" class="section-content">
+    <div id="dashboard-content" class="section-content" style="display: none;">
         <div id="cards">
             <div class="card"><h3>Total Calls</h3><div class="value" id="totalCalls">0</div></div>
             <div class="card"><h3>Missed Calls</h3><div class="value" id="missedCalls">0</div></div>
@@ -187,15 +187,15 @@ th{background:#fafafa;}
         </div>
     </div>
     
-    <div id="call-logs-section" style="display:none;">
-        <div id="filters-row">
+    <div id="call-logs-content" class="section-content" style="display: none;">
+         <div id="filters-row">
             <div id="filters">
                 <button class="filterBtn active" data-type="all">All</button>
                 <button class="filterBtn" data-type="incoming">Incoming</button>
                 <button class="filterBtn" data-type="outgoing">Outgoing</button>
                 <button class="filterBtn" data-type="missed">Missed</button>
             </div>
-             <div id="dateFilter">
+            <div id="dateFilter">
                 <label for="startDate">Date From:</label>
                 <input type="date" id="startDate">
                 <label for="endDate">To:</label>
@@ -203,20 +203,18 @@ th{background:#fafafa;}
             </div>
         </div>
 
-        <div id="call-logs-table">
-             <table>
-                <thead>
-                    <tr>
-                        <th>Number</th>
-                        <th>Name</th>
-                        <th>Type</th>
-                        <th>Duration</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody id="tbody"></tbody>
-            </table>
-        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Number</th>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Duration</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+        </table>
     </div>
 
     <div id="dynamic-content" class="hidden-content" style="display: none;">
@@ -226,30 +224,59 @@ th{background:#fafafa;}
 </div>
 
 <script>
-// --- JAVASCRIPT: Functions & Fixes ---
+// LOGIN PROTECTION
+if(sessionStorage.getItem("auth")!=="1"){ window.location.href="index.html"; }
 
-// GLOBAL DATA
+// --- GLOBAL VARIABLES ---
 let allData = [];
-let filteredData = []; 
+let filteredData = []; // To store data filtered by type/date (used for export)
 let chart, monthlyChart;
+
 const exportBtn = document.getElementById('exportBtn');
 
-// --- 1. DARK MODE & LOGOUT FIX ---
-document.getElementById('modeBtn').onclick = function() {
-    document.body.classList.toggle('dark');
-    this.innerText = document.body.classList.contains('dark') ? 'Light Mode' : 'Dark Mode';
-};
 
-document.getElementById('logoutBtn').onclick = function() {
-    if (confirm("Are you sure you want to log out?")) {
-        alert("Logged out successfully!");
+// --- CORE DATA LOADING (Strictly data.json, No Fallback) ---
+async function loadData(){
+    try{
+        let res=await fetch("data.json?cache="+Math.random());
+        if(!res.ok) {
+            // Throw error to catch block if data.json is not found
+            throw new Error(`Data Load Error: Status ${res.status}`);
+        }
+        allData = await res.json();
+        console.log("data.json loaded successfully.");
+    }catch(e){ 
+        // As requested, no dummy data. Data will be empty if load fails.
+        allData = []; 
+        console.error("Error loading data.json. Call logs will be empty.", e);
+        // You might want an alert here for the user, but keeping it silent for clean experience.
+    }
+    
+    // Always apply filters to update UI based on the loaded (or empty) data
+    applyFilters();
+}
+loadData();
+// Keeping your original auto-refresh interval
+setInterval(loadData,8000); 
+
+// --- 2. LOGOUT FIX (With Confirmation) ---
+document.getElementById("logoutBtn").onclick=()=>{
+    // FIX: Added confirmation dialogue to prevent unwanted behavior/messages
+    if(confirm("Are you sure you want to log out?")){
+        sessionStorage.removeItem("auth");
+        window.location.href="index.html";
     }
 };
 
-document.getElementById('refreshBtn').onclick = loadData;
+// --- DARK MODE & REFRESH (Original Logic) ---
+document.getElementById("modeBtn").onclick=()=>{
+    document.body.classList.toggle("dark");
+    document.getElementById("modeBtn").innerText = document.body.classList.contains("dark")?"Light Mode":"Dark Mode";
+};
+document.getElementById("refreshBtn").onclick=loadData;
 
 
-// --- DYNAMIC CONTENT & MENU LOGIC FIX ---
+// --- STRUCTURAL & MENU LOGIC FIX ---
 document.querySelectorAll(".menu-item").forEach(item => {
     item.onclick = () => {
         document.querySelectorAll(".menu-item").forEach(i => i.classList.remove("active"));
@@ -257,66 +284,37 @@ document.querySelectorAll(".menu-item").forEach(item => {
         
         const section = item.dataset.section;
         const dashboardContent = document.getElementById('dashboard-content');
-        const callLogsSection = document.getElementById('call-logs-section');
+        const callLogsContent = document.getElementById('call-logs-content');
         const dynamicContent = document.getElementById('dynamic-content');
 
-        // Reset display states
+        // Reset display states and export button
         dashboardContent.style.display = 'none';
-        callLogsSection.style.display = 'none';
+        callLogsContent.style.display = 'none';
         dynamicContent.style.display = 'none';
+        exportBtn.style.display = 'none'; 
         
-        // EXPORT BUTTON VISIBILITY CONTROL
-        exportBtn.style.display = 'none';
-
+        // Show relevant section
         if (section === 'dashboard') {
             dashboardContent.style.display = 'block';
-            document.getElementById('search').disabled = false;
-            applyFilters(); 
         } else if (section === 'calls') {
-            callLogsSection.style.display = 'block';
-            exportBtn.style.display = 'inline-flex'; // Show Export button in Call Logs
-            document.getElementById('search').disabled = false;
-            applyFilters(); 
-        } else { // Profile or Settings
+            callLogsContent.style.display = 'block';
+            exportBtn.style.display = 'inline-flex'; // Show Export button
+        } else { // profile/settings
             dynamicContent.style.display = 'block';
-            // DEVELOPMENT MESSAGE
+            // Set the development message
             dynamicContent.innerHTML = `
                 <h2>${section.toUpperCase()}</h2>
                 <p>Welcome to the ${section} section. This area is **under active development** and features will be available soon!</p>
             `;
-            document.getElementById('search').disabled = true;
         }
+        
+        // Re-apply filters to update UI with current data
+        applyFilters(); 
     };
 });
 
-// --- CORE DATA LOADING FIX (Reverting to data.json fetch) ---
-async function loadData() {
-    try {
-        // Fetch data.json from the same directory
-        let res = await fetch("data.json?cache=" + new Date().getTime()); 
-        
-        if (!res.ok) {
-            // Throw an error if the file is not found (404) or other network error occurs
-            throw new Error(`Data Load Error: Could not load data.json. Status: ${res.status}. Make sure the file exists in the same folder.`);
-        }
-        
-        allData = await res.json();
-        console.log("data.json loaded successfully.");
-        
-    } catch (e) {
-        console.error("Data Load FAILED. Check console for error details.", e);
-        // If loading fails, clear existing data and display no results
-        allData = []; 
-        alert("Error loading call data! Please ensure data.json file is present and correctly formatted.");
-    }
-    
-    // Rerun filter after attempting to load data
-    applyFilters(); 
-}
-loadData(); 
 
-
-// --- CALL LOGS/FILTERING LOGIC FIX ---
+// --- 1. CALL LOGS & FILTERING LOGIC FIX (Ensures calls display when dates are empty) ---
 function applyFilters() {
     let temp = allData;
 
@@ -326,14 +324,14 @@ function applyFilters() {
     if (type !== 'all') {
         temp = temp.filter(x => x.type === type);
     }
-
-    // 2. Apply Date Filter 
+    
+    // 2. Apply Date Filter (Crucial: only filter if date inputs are used)
     const startDate = document.getElementById('startDate').value;
     const endDate = document.getElementById('endDate').value;
     
     if (startDate || endDate) {
         temp = temp.filter(x => {
-            const dataDate = x.date.split('T')[0];
+            const dataDate = x.date.split('T')[0]; 
             
             if (startDate && endDate) {
                 return dataDate >= startDate && dataDate <= endDate;
@@ -342,27 +340,25 @@ function applyFilters() {
             } else if (endDate) {
                 return dataDate <= endDate;
             }
-            return true;
+            return true; 
         });
     }
     
-    // Update global filtered data (used for stats, charts, and export)
+    // Update global filtered data (used for export)
     filteredData = temp;
-    
+
     // 3. Apply Search Filter
     const q = document.getElementById("search").value.toLowerCase();
     const searchedData = temp.filter(x => x.number.toLowerCase().includes(q) || x.name.toLowerCase().includes(q));
 
-    // Update UI components
-    updateStats(filteredData);
-    updateChart(filteredData);
-    updateMonthlyChart(filteredData);
-
-    // Table uses searchedData 
-    updateTable(searchedData); 
+    // Update UI components with the final filtered/searched data
+    updateStats(searchedData); 
+    updateChart(searchedData);
+    updateMonthlyChart(searchedData);
+    updateTable(searchedData);
 }
 
-// Attach event listeners for filters
+// Attach consolidated event listeners
 document.querySelectorAll(".filterBtn").forEach(btn => {
     btn.onclick = () => {
         document.querySelectorAll(".filterBtn").forEach(b => b.classList.remove("active"));
@@ -375,6 +371,7 @@ document.getElementById('startDate').onchange = applyFilters;
 document.getElementById('endDate').onchange = applyFilters;
 document.getElementById('search').onkeyup = applyFilters; 
 
+
 // --- UTILITY FUNCTIONS ---
 function updateStats(d){
     document.getElementById("totalCalls").innerText=d.length;
@@ -386,9 +383,9 @@ function updateStats(d){
 function updateTable(data){
     let tb=document.getElementById("tbody");
     tb.innerHTML="";
-    if (data.length === 0) {
-         tb.innerHTML = '<tr><td colspan="5">No calls found for the selected filter/search.</td></tr>';
-         return;
+     if (data.length === 0) {
+        tb.innerHTML = '<tr><td colspan="5">No calls found. Please ensure data.json is present or adjust filters.</td></tr>';
+        return;
     }
     data.slice().reverse().forEach(c=>{
         tb.innerHTML+=`<tr>
@@ -401,7 +398,7 @@ function updateTable(data){
     });
 }
 
-// --- CHART FUNCTIONS ---
+// --- CHART FUNCTIONS (Unchanged) ---
 function updateChart(data){
     let incoming=data.filter(x=>x.type==="incoming").length;
     let outgoing=data.filter(x=>x.type==="outgoing").length;
@@ -410,11 +407,7 @@ function updateChart(data){
     chart=new Chart(document.getElementById("chart"),{
         type:"doughnut",
         data:{labels:["Incoming","Outgoing","Missed"],datasets:[{data:[incoming,outgoing,missed],backgroundColor:["#4CAF50","#2196F3","#e63946"]}]},
-        options:{
-            responsive:true, 
-            maintainAspectRatio: true, 
-            aspectRatio: 1, 
-            plugins:{legend:{position:"bottom"}}}
+        options:{responsive:true, maintainAspectRatio: true, aspectRatio: 1, plugins:{legend:{position:"bottom"}}}
     });
 }
 
@@ -427,17 +420,13 @@ function updateMonthlyChart(data){
     monthlyChart=new Chart(document.getElementById("monthChart"),{
         type:"bar",
         data:{labels,datasets:[{label:"Monthly Calls",data:values,backgroundColor:"#2196F3"}]},
-        options:{
-            responsive:true, 
-            maintainAspectRatio: true, 
-            aspectRatio: 1, 
-            plugins:{legend:{display:false}}}
+        options:{responsive:true, maintainAspectRatio: true, aspectRatio: 1, plugins:{legend:{display:false}}}
     });
 }
 
-// --- EXPORT TO CSV FUNCTION ---
+// --- EXPORT TO CSV FUNCTION (Activated in Call Logs section) ---
 document.getElementById("exportBtn").onclick = () => {
-    const data = filteredData; 
+    const data = filteredData; // Use the data filtered by type/date
     if (data.length === 0) {
         alert("No data to export.");
         return;
@@ -460,7 +449,6 @@ document.getElementById("exportBtn").onclick = () => {
 
     const csvContent = rows.join('\n');
     
-    // Create and download the CSV file
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
     if (link.download !== undefined) { 
@@ -471,17 +459,26 @@ document.getElementById("exportBtn").onclick = () => {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        console.log("Filtered data exported successfully.");
     } else {
         alert("Your browser does not support CSV download.");
     }
 };
 
+
+// LIVE WEBHOOK (Keeping your original logic)
+try{
+    const stream=new EventSource("https://your-proxy-endpoint/webhook");
+    stream.onmessage=e=>pushWebhook(JSON.parse(e.data));
+}catch(err){console.log("Webhook unavailable",err);}
+async function pushWebhook(data){
+    allData.push(data);
+    applyFilters(); 
+}
+
 // Initial setup to display Dashboard on load
 document.addEventListener('DOMContentLoaded', () => {
     document.querySelector('.menu-item[data-section="dashboard"]').click();
 });
-
 </script>
 </body>
 </html>
