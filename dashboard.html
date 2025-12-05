@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Call Dashboard Pro+ v8 (Final)</title>
+<title>📞 Call Dashboard Pro+</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
@@ -136,6 +136,7 @@ th{background:#fafafa;}
 }
 
 @media(max-width:600px){
+    /* Table fixes for mobile */
     table,thead,tbody,th,td,tr{display:block;}
     th{display:none;}
     td{padding:10px;position:relative;border:none;border-bottom:1px solid #444;}
@@ -145,7 +146,18 @@ th{background:#fafafa;}
     td:nth-of-type(3):before{content:"Type";}
     td:nth-of-type(4):before{content:"Duration";}
     td:nth-of-type(5):before{content:"Date";}
-    #dateFilter {flex-direction: column; align-items: flex-start;}
+    
+    /* FIX: Date Filter in one row (removed flex-direction: column) */
+    #dateFilter { 
+        display: flex; /* Ensure it stays flex */
+        flex-wrap: wrap; /* Allow wrapping if screen is too small, but keeps row layout */
+        align-items: center;
+        gap: 5px; /* Reduced gap for smaller screens */
+        padding: 8px;
+    }
+    #dateFilter input {
+        max-width: 100px; /* Limit input width */
+    }
 }
 
 /* CHART ALIGNMENT FIX */
@@ -266,7 +278,7 @@ if(sessionStorage.getItem("auth")!=="1"){ window.location.href="index.html"; }
 
 // --- GLOBAL VARIABLES ---
 let allData = [];
-let filteredData = []; // Data after type/date/search filters (used for stats, charts, and pagination source)
+let filteredData = []; 
 let chart, monthlyChart;
 
 // Pagination Variables
@@ -276,7 +288,7 @@ const rowsPerPage = 10;
 const exportBtn = document.getElementById('exportBtn');
 
 
-// --- CORE DATA LOADING ---
+// --- CORE DATA LOADING (FIX: Removed currentPage = 1 reset) ---
 async function loadData(){
     try{
         // Added Math.random() to prevent aggressive caching and fetch fresh data
@@ -291,15 +303,14 @@ async function loadData(){
         console.error("Error loading data.json. Call logs will be empty.", e);
     }
     
-    // Always apply filters to update UI based on the loaded (or empty) data
-    currentPage = 1; // Reset to page 1 when new data loads
+    // FIX: Do NOT reset currentPage here. This ensures auto-refresh doesn't jump back to page 1.
     applyFilters();
 }
 loadData();
 // Keeping your original auto-refresh interval
 setInterval(loadData,8000); 
 
-// --- 2. LOGOUT FIX (With Confirmation) ---
+// --- LOGOUT & DARK MODE ---
 document.getElementById("logoutBtn").onclick=()=>{
     if(confirm("Are you sure you want to log out?")){
         sessionStorage.removeItem("auth");
@@ -307,13 +318,14 @@ document.getElementById("logoutBtn").onclick=()=>{
     }
 };
 
-// --- DARK MODE & REFRESH (Original Logic) ---
 document.getElementById("modeBtn").onclick=()=>{
     document.body.classList.toggle("dark");
     document.getElementById("modeBtn").innerText = document.body.classList.contains("dark")?"Light Mode":"Dark Mode";
 };
+
+// FIX: Reset page to 1 on manual refresh
 document.getElementById("refreshBtn").onclick=()=>{
-    currentPage = 1; // Reset page on manual refresh
+    currentPage = 1; 
     loadData();
 };
 
@@ -349,8 +361,7 @@ document.querySelectorAll(".menu-item").forEach(item => {
             `;
         }
         
-        // Always apply filters to ensure stats/charts are updated when navigating to dashboard
-        // and pagination is correctly rendered when navigating to calls
+        // Apply filters to ensure data and charts are updated
         applyFilters(); 
     };
 });
@@ -395,16 +406,16 @@ function applyFilters() {
     updateChart(filteredData);
     updateMonthlyChart(filteredData);
     
-    // Update table and pagination
+    // Update table and pagination (retains currentPage value from global variable)
     changePage(currentPage);
 }
 
-// Attach consolidated event listeners
+// Attach event listeners for filtering (Reset page to 1 on filter/search change)
 document.querySelectorAll(".filterBtn").forEach(btn => {
     btn.onclick = () => {
         document.querySelectorAll(".filterBtn").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
-        currentPage = 1; // Reset to page 1 on filter change
+        currentPage = 1; 
         applyFilters();
     };
 });
@@ -414,9 +425,14 @@ document.getElementById('endDate').onchange = () => { currentPage = 1; applyFilt
 document.getElementById('search').onkeyup = () => { currentPage = 1; applyFilters(); };
 
 
-// --- PAGINATION & TABLE LOGIC (NEW) ---
+// --- PAGINATION & TABLE LOGIC ---
 
 function changePage(page) {
+    // Ensure page number is valid
+    const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+    if (page < 1) page = 1;
+    if (page > totalPages) page = totalPages;
+
     currentPage = page;
     const data = filteredData.slice().reverse(); // Show newest calls first
 
@@ -498,7 +514,7 @@ function updateChart(data){
     let outgoing=data.filter(x=>x.type==="outgoing").length;
     let missed=data.filter(x=>x.type==="missed").length;
     
-    // FIX: Destroying the old chart ensures the animation runs again (nachna)
+    // FIX: Destroying and recreating the chart forces the animation ("nachna")
     if(chart) chart.destroy(); 
     
     chart=new Chart(document.getElementById("chart"),{
@@ -509,9 +525,8 @@ function updateChart(data){
             maintainAspectRatio: true, 
             aspectRatio: 1, 
             plugins:{legend:{position:"bottom"}},
-            // Animation configuration to ensure the chart "nach raha hai" (is dancing)
             animation: {
-                duration: 1000, // 1 second animation
+                duration: 1000, 
                 easing: 'easeOutQuart'
             }
         }
@@ -550,13 +565,12 @@ function updateStats(d){
 
 // --- EXPORT TO CSV FUNCTION ---
 document.getElementById("exportBtn").onclick = () => {
-    // Export button will export the filtered (but not paginated) data
     const data = filteredData; 
     if (data.length === 0) {
         alert("No data to export.");
         return;
     }
-    // ... (rest of the CSV export logic is same as before)
+
     const headers = ["Number", "Name", "Type", "Duration", "Date"];
     const rows = [headers.join(',')];
 
@@ -589,13 +603,14 @@ document.getElementById("exportBtn").onclick = () => {
 };
 
 
-// LIVE WEBHOOK (Ensures real-time updates)
+// LIVE WEBHOOK (Retained for real-time updates)
 try{
     const stream=new EventSource("https://your-proxy-endpoint/webhook");
     stream.onmessage=e=>pushWebhook(JSON.parse(e.data));
 }catch(err){console.log("Webhook unavailable",err);}
 async function pushWebhook(data){
     allData.push(data);
+    // When new data comes, we don't reset the page, we just refresh the data on the current page.
     applyFilters(); 
 }
 
