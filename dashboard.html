@@ -541,7 +541,7 @@ function updateTable(data){
     let tb=document.getElementById("tbody");
     tb.innerHTML="";
      if (data.length === 0) {
-        tb.innerHTML = '<tr><td colspan="5">No calls found. Please ensure data.json is present or adjust filters.</td></tr>';
+        tb.innerHTML = '<tr><td colspan="5">No calls found.</td></tr>';
         return;
     }
     data.forEach(c=>{
