@@ -1,5 +1,4 @@
 [
-  /* --- Month 1 (January 2025): 60 Calls --- */
   { "id": 1, "number": "+919000000001", "name": "Ramesh J-1", "type": "incoming", "duration": "00:02:30", "date": "2025-01-01" },
   { "id": 2, "number": "+919000000002", "name": "Priya J-2", "type": "outgoing", "duration": "00:01:45", "date": "2025-01-01" },
   { "id": 3, "number": "+919000000003", "name": "Amit J-3", "type": "missed", "duration": "00:00:00", "date": "2025-01-02" },
@@ -61,7 +60,6 @@
   { "id": 59, "number": "+919000000059", "name": "Dinesh J-59", "type": "outgoing", "duration": "00:01:50", "date": "2025-01-31" },
   { "id": 60, "number": "+919000000060", "name": "Vishal J-60", "type": "incoming", "duration": "00:03:00", "date": "2025-01-31" },
   
-  /* --- Month 2 (February 2025): 50 Calls --- */
   { "id": 61, "number": "+919000000061", "name": "Sita F-1", "type": "incoming", "duration": "00:04:15", "date": "2025-02-01" },
   { "id": 62, "number": "+919000000062", "name": "Mohan F-2", "type": "outgoing", "duration": "00:02:05", "date": "2025-02-02" },
   { "id": 63, "number": "+919000000063", "name": "Iqbal F-3", "type": "missed", "duration": "00:00:00", "date": "2025-02-03" },
@@ -113,7 +111,6 @@
   { "id": 109, "number": "+919000000109", "name": "Jeevan F-49", "type": "outgoing", "duration": "00:04:00", "date": "2025-02-15" },
   { "id": 110, "number": "+919000000110", "name": "Gita F-50", "type": "incoming", "duration": "00:04:10", "date": "2025-02-14" },
 
-  /* --- Month 3 (March 2025): 40 Calls --- */
   { "id": 111, "number": "+919000000111", "name": "Ravi M-1", "type": "outgoing", "duration": "00:01:50", "date": "2025-03-01" },
   { "id": 112, "number": "+919000000112", "name": "Kajal M-2", "type": "incoming", "duration": "00:05:30", "date": "2025-03-02" },
   { "id": 113, "number": "+919000000113", "name": "Lalit M-3", "type": "missed", "duration": "00:00:00", "date": "2025-03-03" },
@@ -155,7 +152,7 @@
   { "id": 149, "number": "+919000000149", "name": "Yash M-39", "type": "incoming", "duration": "00:03:15", "date": "2025-03-31" },
   { "id": 150, "number": "+919000000150", "name": "Arjun M-40", "type": "outgoing", "duration": "00:02:00", "date": "2025-03-31" },
 
-  /* --- Month 4 (April 2025): 30 Calls --- */
+  /* -
   { "id": 151, "number": "+919000000151", "name": "Tanya A-1", "type": "missed", "duration": "00:00:00", "date": "2025-04-01" },
   { "id": 152, "number": "+919000000152", "name": "Sunny A-2", "type": "incoming", "duration": "00:03:08", "date": "2025-04-02" },
   { "id": 153, "number": "+919000000153", "name": "Vicky A-3", "type": "outgoing", "duration": "00:04:10", "date": "2025-04-03" },
@@ -187,7 +184,7 @@
   { "id": 179, "number": "+919000000179", "name": "Yash A-29", "type": "incoming", "duration": "00:04:15", "date": "2025-04-29" },
   { "id": 180, "number": "+919000000180", "name": "Preeti A-30", "type": "outgoing", "duration": "00:04:10", "date": "2025-04-30" },
 
-  /* --- Month 5 (May 2025): 20 Calls --- */
+
   { "id": 181, "number": "+919000000181", "name": "Gopal Ma-1", "type": "outgoing", "duration": "00:01:10", "date": "2025-05-01" },
   { "id": 182, "number": "+919000000182", "name": "Heena Ma-2", "type": "incoming", "duration": "00:02:45", "date": "2025-05-03" },
   { "id": 183, "number": "+919000000183", "name": "Ishan Ma-3", "type": "missed", "duration": "00:00:00", "date": "2025-05-05" },
@@ -209,7 +206,6 @@
   { "id": 199, "number": "+919000000199", "name": "Chirag Ma-19", "type": "outgoing", "duration": "00:02:25", "date": "2025-05-31" },
   { "id": 200, "number": "+919000000200", "name": "Akash Ma-20", "type": "missed", "duration": "00:00:00", "date": "2025-05-31" },
 
-  /* --- Month 6 (June 2025): 10 Calls --- */
   { "id": 201, "number": "+919000000201", "name": "Faisal Ju-1", "type": "incoming", "duration": "00:03:30", "date": "2025-06-01" },
   { "id": 202, "number": "+919000000202", "name": "Leena Ju-2", "type": "outgoing", "duration": "00:01:55", "date": "2025-06-05" },
   { "id": 203, "number": "+919000000203", "name": "Manas Ju-3", "type": "missed", "duration": "00:00:00", "date": "2025-06-10" },
