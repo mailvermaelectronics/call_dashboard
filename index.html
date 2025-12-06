@@ -12,7 +12,8 @@
   /* Global Reset and Typography */
   body{
     font-family:'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
-    background:#eef1f6;
+    /* Updated for a more professional and soothing background */
+    background:#f4f7fa; 
     display:flex;
     align-items:center;
     justify-content:center;
@@ -25,10 +26,12 @@
     background:#ffffff;
     padding:40px;
     width:100%;
-    max-width:380px;
-    border-radius:16px;
-    box-shadow:0 10px 30px rgba(0,0,0,0.08);
+    max-width:400px; /* Slightly wider box */
+    border-radius:12px; /* Slightly reduced border radius for modern look */
+    /* Updated shadow for a cleaner lift-off effect */
+    box-shadow:0 8px 25px rgba(0,0,0,0.1); 
     transition:transform 0.3s ease;
+    border-top: 4px solid #007bff; /* Professional accent line */
   }
 
   /* Logo Styling */
@@ -39,7 +42,7 @@
   }
   .logo {
     width: auto; 
-    max-height: 80px; 
+    max-height: 70px; /* Slightly smaller logo */
     display: inline-block;
     background-color: transparent !important; 
     border: none !important; 
@@ -49,41 +52,45 @@
   h2{
     text-align:center;
     color:#1f2937;
-    margin-bottom: 20px;
+    margin-bottom: 30px; /* Increased margin for spacing */
     font-weight: 700;
-    font-size: 24px;
+    font-size: 26px; /* Slightly larger heading */
   }
   
   /* Input Fields */
+  /* FIX: Changed width to 100% and relied on padding inside the box */
   input{
-    width:calc(100% - 20px);
-    padding:12px 10px;
+    width:100%; 
+    padding:14px 12px; /* Increased padding */
     margin-top:15px;
-    border-radius:10px;
-    border:1px solid #e5e7eb;
+    border-radius:8px; /* Slightly reduced border radius */
+    border:1px solid #d1d5db; /* Softer border color */
     transition:border-color 0.3s, box-shadow 0.3s;
     font-size:16px;
     color:#374151;
-    box-sizing: border-box; /* IMPORTANT for container sizing */
+    box-sizing: border-box; 
   }
-  /* Focus color matches the blue button color (#2563eb) */
+  /* Focus color matches a professional blue (#007bff) */
   input:focus{
-    border-color:#2563eb; 
+    border-color:#007bff; 
     outline:none;
-    box-shadow:0 0 0 3px rgba(37, 99, 235, 0.2);
+    box-shadow:0 0 0 3px rgba(0, 123, 255, 0.2);
   }
 
   /* Password Container: To hold both input and toggle button */
   .password-container {
     position: relative;
     margin-top: 15px; 
+    /* FIX: Added box-sizing here too for consistency */
+    box-sizing: border-box; 
   }
   
   /* Password Input inside the container (resets width and padding) */
   .password-container input {
     margin-top: 0; 
-    width: 100%; 
+    width: 100%; /* FIX: Ensures it takes full container width */
     padding-right: 45px; /* Space for the icon */
+    box-sizing: border-box; /* FIX: Applied box-sizing here */
   }
   
   /* Toggle Button Styling (Positioned absolutely inside the container) */
@@ -95,10 +102,11 @@
     background: none;
     border: none;
     cursor: pointer;
-    color: #6b7280;
+    color: #9ca3af; /* Muted icon color */
     line-height: 1;
     padding: 10px; 
     z-index: 10;
+    transition: color 0.2s ease; /* Added transition for hover effect */
   }
   .toggle-password:hover {
     color: #1f2937;
@@ -118,36 +126,50 @@
   button[type="submit"], button[onclick="login()"] { /* Targets the login button */
     width:100%;
     padding:14px;
-    margin-top:25px;
+    margin-top:30px; /* Increased margin */
     border:0;
-    border-radius:10px;
-    background:#2563eb;
+    border-radius:8px;
+    background:#007bff; /* Professional blue color */
     color:#fff;
     font-weight:600;
     cursor:pointer;
-    font-size:16px;
+    font-size:17px; /* Slightly larger font */
     transition:background-color 0.3s, box-shadow 0.3s;
   }
   button[type="submit"]:hover, button[onclick="login()"]:hover{
-    background:#1d4ed8;
-    box-shadow:0 4px 15px rgba(37, 99, 235, 0.3);
+    background:#0056b3; /* Darker hover blue */
+    box-shadow:0 6px 20px rgba(0, 123, 255, 0.4);
+  }
+  button[type="submit"]:disabled {
+    background-color: #99cfff;
+    cursor: not-allowed;
+    box-shadow: none;
   }
   
   /* Muted Text */
   .muted{
-    font-size:14px;
-    color:#6b7280;
-    margin-top:15px;
+    font-size:13px; /* Slightly smaller */
+    color:#9ca3af; /* Muted text color */
+    margin-top:20px;
     text-align:center;
   }
   
   /* Message Area */
   #msg{
-    margin-top:15px;
+    margin-top:20px;
     font-size:15px;
     text-align:center;
-    padding:10px;
+    padding:12px; /* Increased padding */
     border-radius:8px;
+    /* Added border */
+    border: 1px solid transparent; 
+  }
+  /* Specific message colors */
+  #msg[style*="991b1b"] { /* Error */
+    border-color: #fca5a5;
+  }
+  #msg[style*="065f46"] { /* Success */
+    border-color: #6ee7b7;
   }
 </style>
 
@@ -156,7 +178,7 @@
 <div class="box">
 
   <div class="logo-container">
-    <img src="res/logo.png" alt="Company Logo" class="logo">
+    <img src="res/logo.png" alt="Company Logo" class="logo"> 
   </div>
 
   <h2>📞 Dashboard Login</h2>
