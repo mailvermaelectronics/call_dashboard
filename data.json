@@ -1468,19 +1468,5 @@
         "type": "missed",
         "duration": "00:00:00",
         "date": "2025-06-30"
-    },
-    {
-        "number": "+919670182343",
-        "name": "Unknown",
-        "type": "missed",
-        "duration": "00:00:00",
-        "date": "2025-12-08"
-    },
-    {
-        "number": "",
-        "name": "Unknown",
-        "type": "incoming",
-        "duration": "00:00:00",
-        "date": "2025-12-08"
     }
 ]
