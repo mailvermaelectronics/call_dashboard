@@ -24,12 +24,10 @@ body.dark #search {background:#1f1f1f; color:white; border-color:#555;}
 
 /* ** NEW FIX: Dark mode active filter button visibility ** */
 body.dark .filterBtn.active{
-    background: white; /* White background to be visible against dark backdrop */
-    color: black;      /* Black text for contrast */
+    background: white; 
+    color: black;      
     border-color: white;
 }
-/* ** END NEW FIX ** */
-
 
 /* SIDEBAR */
 #sidebar{
@@ -44,7 +42,16 @@ body.dark .filterBtn.active{
     transition:0.3s;
     z-index:1000;
 }
-#sidebar h2{margin-bottom:25px;font-size:22px;font-weight:700;}
+
+/* Logo Styling in Sidebar */
+.sidebar-logo {
+    width: 100%;
+    max-height: 80px;
+    object-fit: contain;
+    margin-bottom: 25px;
+    display: block;
+}
+
 .menu-item{padding:12px;border-radius:10px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:12px;font-size:15px;}
 .menu-item:hover{background:#efefef;}
 .menu-item.active{background:#2196F3;color:white;}
@@ -66,7 +73,6 @@ body.dark .filterBtn.active{
     gap: 10px; 
     align-items: center;
 }
-/* BUTTON STYLE FIX (Export button added) */
 #modeBtn, #logoutBtn, #refreshBtn, #exportBtn{
     padding: 10px 16px;
     font-size: 14px; 
@@ -91,7 +97,7 @@ body.dark .filterBtn.active{
 .card h3{margin:0;font-size:15px;opacity:0.8;}
 .card .value{font-size:28px;font-weight:700;margin-top:8px;text-align:center;}
 
-/* FILTERS ROW (Combined Type and Date) */
+/* FILTERS ROW */
 #filters-row{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:15px;margin-bottom:20px;}
 #filters{display:flex;flex-wrap:wrap;gap:10px;} 
 #dateFilter{
@@ -103,24 +109,23 @@ body.dark .filterBtn.active{
     border-radius:8px;
     box-shadow:0 2px 5px rgba(0,0,0,0.05);
 }
-/* ** Date Input Box Size Fix ** */
 #dateFilter input{
     padding:5px;
     border:1px solid #ccc;
     border-radius:5px;
-    width: 100px; /* DD/MM/YYYY को पूरी तरह भरने के लिए चौड़ाई को सीमित किया गया */
+    width: 100px; 
     text-align: center;
 }
 
 .filterBtn{padding:10px 16px;border-radius:8px;border:1px solid #bbb;cursor:pointer;background:white;}
-.filterBtn.active{background:black;color:white;border-color:black;} /* Default active state (Light Mode) */
+.filterBtn.active{background:black;color:white;border-color:black;}
 
 /* TABLE */
 table{width:100%;border-collapse:collapse;background:white;border-radius:16px;overflow:hidden;margin-bottom:15px;}
 th,td{padding:12px;border-bottom:1px solid #eee;text-align:center;}
 th{background:#fafafa;}
 
-/* Pagination Styles */
+/* Pagination */
 #pagination-controls {
     display: flex;
     justify-content: center;
@@ -137,14 +142,10 @@ th{background:#fafafa;}
     border-radius: 6px;
     transition: background 0.2s;
 }
-#pagination-controls button:hover:not(.active) {
-    background: #f0f0f0;
-}
 #pagination-controls button.active {
     background: #2196F3;
     color: white;
     border-color: #2196F3;
-    cursor: default;
 }
 #pagination-controls button:disabled {
     opacity: 0.5;
@@ -152,7 +153,6 @@ th{background:#fafafa;}
 }
 
 @media(max-width:600px){
-    /* Table fixes for mobile */
     table,thead,tbody,th,td,tr{display:block;}
     th{display:none;}
     td{padding:10px;position:relative;border:none;border-bottom:1px solid #444;}
@@ -162,21 +162,11 @@ th{background:#fafafa;}
     td:nth-of-type(3):before{content:"Type";}
     td:nth-of-type(4):before{content:"Duration";}
     td:nth-of-type(5):before{content:"Date";}
-    
-    /* Date Filter in one row (Fixed CSS) */
-    #dateFilter { 
-        display: flex; 
-        flex-wrap: wrap; 
-        align-items: center;
-        gap: 5px; 
-        padding: 8px;
-    }
-    #dateFilter input {
-        max-width: 100px; 
-    }
+    #dateFilter { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; padding: 8px;}
+    #dateFilter input { max-width: 100px; }
 }
 
-/* CHART ALIGNMENT FIX */
+/* CHARTS */
 #charts-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); 
@@ -184,7 +174,6 @@ th{background:#fafafa;}
     margin-top: 20px;
     justify-content: center;
 }
-
 #chartBox{
     background:white;
     border-radius:20px;
@@ -194,7 +183,6 @@ th{background:#fafafa;}
 }
 #chartBox canvas{max-width:100% !important;height:auto !important;}
 
-/* Dynamic Content Style */
 .hidden-content {
     background: white;
     padding: 30px;
@@ -210,7 +198,8 @@ th{background:#fafafa;}
 <body>
 
 <div id="sidebar">
-    <h2>📞 Dashboard Pro+</h2>
+    <img src="https://drive.google.com/thumbnail?id=1scerhEsZRhAR_CrL31KIQZNx83Vzlfhc&sz=w1000" alt="Logo" class="sidebar-logo">
+    
     <div class="menu-item" data-section="dashboard"><i class="fa fa-chart-line"></i> Dashboard</div>
     <div class="menu-item active" data-section="calls"><i class="fa fa-phone"></i> Call Logs</div>
     <div class="menu-item" data-section="profile"><i class="fa fa-user"></i> Profile</div>
@@ -240,7 +229,6 @@ th{background:#fafafa;}
                 <h3>Call Type Distribution</h3>
                 <canvas id="chart"></canvas> 
             </div>
-
             <div id="chartBox">
                 <h3>Monthly Calls</h3>
                 <canvas id="monthChart"></canvas>
@@ -276,134 +264,67 @@ th{background:#fafafa;}
             </thead>
             <tbody id="tbody"></tbody>
         </table>
-        
-        <div id="pagination-controls">
-            </div>
-
+        <div id="pagination-controls"></div>
     </div>
 
     <div id="dynamic-content" class="hidden-content" style="display: none;">
         Loading content...
     </div>
-
 </div>
 
 <script>
 // LOGIN PROTECTION
 if(sessionStorage.getItem("auth")!=="1"){ window.location.href="index.html"; }
 
-// --- GLOBAL VARIABLES ---
 let allData = [];
 let filteredData = []; 
 let chart, monthlyChart;
-
-// Pagination Variables
 let currentPage = 1;
 const rowsPerPage = 10;
-
 const exportBtn = document.getElementById('exportBtn');
 
-// --- UTILITY FUNCTIONS FOR DATE FORMATTING AND AUTO-JUMP ---
-
-/**
- * Handles automatic insertion of '/' and triggers filter when DD/MM/YYYY is complete.
- */
 function autoFormatDate(input) {
-    let value = input.value.replace(/[^0-9]/g, ''); // Remove non-digits
-    
+    let value = input.value.replace(/[^0-9]/g, ''); 
     const start = input.selectionStart;
-    const end = input.selectionEnd;
     const len = input.value.length;
-
     let newValue = value;
-
-    if (value.length > 2) {
-        newValue = value.substring(0, 2) + '/' + value.substring(2);
-    }
-    if (value.length > 4) {
-        newValue = newValue.substring(0, 5) + '/' + newValue.substring(5);
-    }
-    
-    if (newValue.length > 10) {
-        newValue = newValue.substring(0, 10);
-    }
-
+    if (value.length > 2) newValue = value.substring(0, 2) + '/' + value.substring(2);
+    if (value.length > 4) newValue = newValue.substring(0, 5) + '/' + newValue.substring(5);
+    if (newValue.length > 10) newValue = newValue.substring(0, 10);
     input.value = newValue;
-    
-    let newCursorPos = start;
-
-    if (len === 2 && input.value.length === 3) {
-        newCursorPos = 3;
-    }
-    else if (len === 5 && input.value.length === 6) {
-        newCursorPos = 6;
-    }
-    else if (start === len) {
-        newCursorPos = input.value.length;
-    }
-    
-    if (newCursorPos > input.value.length) {
-        newCursorPos = input.value.length;
-    }
-
-    window.requestAnimationFrame(() => {
-        input.setSelectionRange(newCursorPos, newCursorPos);
-    });
-    
-    if (input.value.length === 10) {
-        currentPage = 1;
-        applyFilters();
-    }
+    if (input.value.length === 10) { currentPage = 1; applyFilters(); }
 }
 
-
-/**
- * Parses a date string in DD/MM/YYYY format to YYYY-MM-DD for comparison.
- */
 function parseDateForFilter(dateString) {
     if (!dateString) return null;
     const parts = dateString.trim().split('/');
-    if (parts.length === 3 && parts[0].length <= 2 && parts[1].length <= 2 && parts[2].length === 4) {
+    if (parts.length === 3) {
         const [day, month, year] = parts;
         return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
     }
     return null; 
 }
 
-/**
- * Formats a date string (from data: YYYY-MM-DDTHH:MM:SS) to DD/MM/YYYY for the table.
- */
 function formatDateForTable(isoDate) {
     if (!isoDate) return '';
-    const datePart = isoDate.split('T')[0]; // YYYY-MM-DD
+    const datePart = isoDate.split('T')[0];
     const parts = datePart.split('-');
-    if (parts.length === 3) {
-        return `${parts[2]}/${parts[1]}/${parts[0]}`;
-    }
-    return datePart;
+    return parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : datePart;
 }
 
-// --- CORE DATA LOADING ---
 async function loadData(){
     try{
         let res=await fetch("data.json?cache="+Math.random()); 
-        if(!res.ok) {
-            throw new Error(`Data Load Error: Status ${res.status}`);
-        }
         allData = await res.json();
-        console.log("data.json loaded successfully.");
     }catch(e){ 
         allData = []; 
-        console.error("Error loading data.json. Call logs will be empty.", e);
+        console.error("Error loading data.json", e);
     }
-    
     applyFilters();
 }
 loadData();
-// Keeping your original auto-refresh interval
 setInterval(loadData,8000); 
 
-// --- LOGOUT & DARK MODE ---
 document.getElementById("logoutBtn").onclick=()=>{
     if(confirm("Are you sure you want to log out?")){
         sessionStorage.removeItem("auth");
@@ -416,103 +337,55 @@ document.getElementById("modeBtn").onclick=()=>{
     document.getElementById("modeBtn").innerText = document.body.classList.contains("dark")?"Light Mode":"Dark Mode";
 };
 
-// ** Refresh Button FIX: Calls loadData, which calls applyFilters, which updates charts with animation **
 document.getElementById("refreshBtn").onclick=()=>{
     currentPage = 1; 
     loadData();
 };
 
-
-// --- STRUCTURAL & MENU LOGIC (CLEANED UP) ---
 document.querySelectorAll(".menu-item").forEach(item => {
     item.onclick = () => {
         document.querySelectorAll(".menu-item").forEach(i => i.classList.remove("active"));
         item.classList.add("active");
-        
         const section = item.dataset.section;
-        const dashboardContent = document.getElementById('dashboard-content');
-        const callLogsContent = document.getElementById('call-logs-content');
-        const dynamicContent = document.getElementById('dynamic-content');
-
-        // Reset display states and export button
-        dashboardContent.style.display = 'none';
-        callLogsContent.style.display = 'none';
-        dynamicContent.style.display = 'none';
-        exportBtn.style.display = 'none'; 
-        
-        // Show relevant section
-        if (section === 'dashboard') {
-            dashboardContent.style.display = 'block';
-            exportBtn.style.display = 'none';
-            // Chart updates will be handled by the applyFilters() call below 
-            // after the section display is set to 'block'.
-        } else if (section === 'calls') {
-            callLogsContent.style.display = 'block';
-            exportBtn.style.display = 'inline-flex'; 
-        } else { // profile/settings
-            dynamicContent.style.display = 'block';
-            dynamicContent.innerHTML = `
-                <h2>${section.toUpperCase()}</h2>
-                <p>Welcome to the ${section} section. This area is **under active development** and features will be available soon!</p>
-            `;
+        document.getElementById('dashboard-content').style.display = section === 'dashboard' ? 'block' : 'none';
+        document.getElementById('call-logs-content').style.display = section === 'calls' ? 'block' : 'none';
+        document.getElementById('dynamic-content').style.display = (section !== 'dashboard' && section !== 'calls') ? 'block' : 'none';
+        exportBtn.style.display = section === 'calls' ? 'inline-flex' : 'none';
+        if (section !== 'dashboard' && section !== 'calls') {
+            document.getElementById('dynamic-content').innerHTML = `<h2>${section.toUpperCase()}</h2><p>Coming Soon!</p>`;
         }
-        
-        // ** Centralized logic for updating stats and charts - This triggers the animation when switching to dashboard **
         applyFilters(); 
     };
 });
 
-
-// --- CALL LOGS & FILTERING LOGIC ---
 function applyFilters() {
     let temp = allData;
-
-    // 1. Apply Type Filter
     const activeType = document.querySelector('#filters .filterBtn.active');
     const type = activeType ? activeType.dataset.type : 'all';
-    if (type !== 'all') {
-        temp = temp.filter(x => x.type === type);
-    }
+    if (type !== 'all') temp = temp.filter(x => x.type === type);
     
-    // 2. Apply Date Filter
-    const rawStartDate = document.getElementById('startDate').value;
-    const rawEndDate = document.getElementById('endDate').value;
-    
-    const filterStartDate = parseDateForFilter(rawStartDate);
-    const filterEndDate = parseDateForFilter(rawEndDate);
+    const filterStartDate = parseDateForFilter(document.getElementById('startDate').value);
+    const filterEndDate = parseDateForFilter(document.getElementById('endDate').value);
     
     if (filterStartDate || filterEndDate) {
         temp = temp.filter(x => {
             const dataDate = x.date.split('T')[0];
-            
-            if (filterStartDate && filterEndDate) {
-                return dataDate >= filterStartDate && dataDate <= filterEndDate;
-            } else if (filterStartDate) {
-                return dataDate >= filterStartDate;
-            } else if (filterEndDate) {
-                return dataDate <= filterEndDate;
-            }
-            return true; 
+            if (filterStartDate && filterEndDate) return dataDate >= filterStartDate && dataDate <= filterEndDate;
+            return filterStartDate ? dataDate >= filterStartDate : dataDate <= filterEndDate;
         });
     }
     
-    // 3. Apply Search Filter
     const q = document.getElementById("search").value.toLowerCase();
     filteredData = temp.filter(x => x.number.toLowerCase().includes(q) || x.name.toLowerCase().includes(q));
 
-    // Update UI components with the final filtered/searched data
     updateStats(filteredData); 
-    
-    // ** CHART UPDATE: Only update charts if Dashboard is currently visible to trigger animation **
     if(document.getElementById('dashboard-content').style.display !== 'none') {
         updateChart(filteredData); 
         updateMonthlyChart(filteredData);
     }
-    
     changePage(currentPage);
 }
 
-// Attach event listeners for filtering (Reset page to 1 on filter/search change)
 document.querySelectorAll(".filterBtn").forEach(btn => {
     btn.onclick = () => {
         document.querySelectorAll(".filterBtn").forEach(b => b.classList.remove("active"));
@@ -522,140 +395,70 @@ document.querySelectorAll(".filterBtn").forEach(btn => {
     };
 });
 
-document.getElementById('startDate').onchange = () => { currentPage = 1; applyFilters(); };
-document.getElementById('endDate').onchange = () => { currentPage = 1; applyFilters(); };
 document.getElementById('search').onkeyup = () => { currentPage = 1; applyFilters(); };
 
-
-// --- PAGINATION & TABLE LOGIC ---
-
 function changePage(page) {
-    const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+    const totalPages = Math.ceil(filteredData.length / rowsPerPage) || 1;
     if (page < 1) page = 1;
     if (page > totalPages) page = totalPages;
-
     currentPage = page;
     const data = filteredData.slice().reverse(); 
-
     const start = (page - 1) * rowsPerPage;
-    const end = start + rowsPerPage;
-    
-    const paginatedItems = data.slice(start, end); 
-
-    updateTable(paginatedItems); 
+    updateTable(data.slice(start, start + rowsPerPage)); 
     renderPagination(data.length, currentPage);
 }
 
 function updateTable(data){
     let tb=document.getElementById("tbody");
-    tb.innerHTML="";
-     if (data.length === 0) {
-        tb.innerHTML = '<tr><td colspan="5">No calls found.</td></tr>';
-        return;
-    }
+    tb.innerHTML= data.length === 0 ? '<tr><td colspan="5">No calls found.</td></tr>' : "";
     data.forEach(c=>{
-        tb.innerHTML+=`<tr>
-            <td>${c.number}</td>
-            <td>${c.name}</td>
-            <td>${c.type}</td>
-            <td>${c.duration}</td>
-            <td>${formatDateForTable(c.date)}</td> 
-        </tr>`;
+        tb.innerHTML+=`<tr><td>${c.number}</td><td>${c.name}</td><td>${c.type}</td><td>${c.duration}</td><td>${formatDateForTable(c.date)}</td></tr>`;
     });
 }
 
 function renderPagination(totalRows, currentPage) {
     const paginationEl = document.getElementById("pagination-controls");
     paginationEl.innerHTML = '';
-    
     const pageCount = Math.ceil(totalRows / rowsPerPage);
-
     if (pageCount <= 1) return; 
 
-    // Previous Button
     const prevBtn = document.createElement('button');
-    prevBtn.innerHTML = '<i class="fa fa-angle-left"></i> Previous';
+    prevBtn.innerHTML = 'Previous';
     prevBtn.disabled = currentPage === 1;
     prevBtn.onclick = () => changePage(currentPage - 1);
     paginationEl.appendChild(prevBtn);
 
-    // Page Number Buttons
-    const maxButtons = 5;
-    let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
-    let endPage = Math.min(pageCount, startPage + maxButtons - 1);
-
-    if (endPage - startPage + 1 < maxButtons) {
-        startPage = Math.max(1, endPage - maxButtons + 1);
-    }
-
-    for (let i = startPage; i <= endPage; i++) {
+    for (let i = 1; i <= pageCount; i++) {
+        if(i > 5 && i < pageCount) continue; // Basic skip for many pages
         const btn = document.createElement('button');
         btn.innerText = i;
-        btn.classList.add('page-num');
-        if (i === currentPage) {
-            btn.classList.add('active');
-        }
+        if (i === currentPage) btn.classList.add('active');
         btn.onclick = () => changePage(i);
         paginationEl.appendChild(btn);
     }
     
-    // Next Button
     const nextBtn = document.createElement('button');
-    nextBtn.innerHTML = 'Next <i class="fa fa-angle-right"></i>';
+    nextBtn.innerHTML = 'Next';
     nextBtn.disabled = currentPage === pageCount;
     nextBtn.onclick = () => changePage(currentPage + 1);
     paginationEl.appendChild(nextBtn);
 }
 
-// --- CHART FUNCTIONS (ANIMATION CONFIGURATION) ---
 function updateChart(data){
     let incoming=data.filter(x=>x.type==="incoming").length;
     let outgoing=data.filter(x=>x.type==="outgoing").length;
     let missed=data.filter(x=>x.type==="missed").length;
-    
     const chartBox = document.querySelector('#charts-container > #chartBox:first-child'); 
-    
     if (!chartBox) return;
-    
-    // पुराने चार्ट को नष्ट और कैनवस को हटाना (Animation Fix)
     let oldCanvas = document.getElementById('chart');
-    if (oldCanvas) {
-        if(chart) {
-            chart.destroy();
-            chart = null; 
-        }
-        oldCanvas.remove();
-    }
-    
-    // नया कैनवस बनाना
+    if (oldCanvas) { if(chart) chart.destroy(); oldCanvas.remove(); }
     const newCanvas = document.createElement('canvas');
     newCanvas.id = 'chart'; 
-    
-    const h3 = chartBox.querySelector('h3');
-    if (h3) {
-        h3.after(newCanvas); 
-    } else {
-        chartBox.appendChild(newCanvas);
-    }
-    
+    chartBox.querySelector('h3').after(newCanvas); 
     chart = new Chart(newCanvas, { 
         type:"doughnut",
         data:{labels:["Incoming","Outgoing","Missed"],datasets:[{data:[incoming,outgoing,missed],backgroundColor:["#4CAF50","#2196F3","#e63946"]}]},
-        options:{
-            responsive:true, 
-            maintainAspectRatio: true, 
-            aspectRatio: 1, 
-            plugins:{legend:{position:"bottom"}},
-            // ** एनिमेशन सेटिंग्स **
-            animation: { 
-                duration: 1200, 
-                easing: 'easeOutQuart',
-                animateRotate: true, // स्पिन इफ़ेक्ट के लिए
-                animateScale: false 
-            },
-            rotation: -90, 
-            circumference: 360 
-        }
+        options:{ responsive:true, plugins:{legend:{position:"bottom"}}, animation: { duration: 1200, easing: 'easeOutQuart' } }
     });
 }
 
@@ -664,43 +467,20 @@ function updateMonthlyChart(data){
     data.forEach(x=>{let m=x.date.slice(0,7); months[m]=(months[m]||0)+1;}); 
     let labels=Object.keys(months).sort();
     let values=labels.map(k=>months[k]);
-    
     const chartBox = document.querySelector('#charts-container > #chartBox:last-child');
     if (!chartBox) return;
-
-    // पुराने चार्ट को नष्ट और कैनवस को हटाना (Animation Fix)
     let oldCanvas = document.getElementById('monthChart');
-    if (oldCanvas) {
-        if(monthlyChart) {
-            monthlyChart.destroy();
-            monthlyChart = null; 
-        }
-        oldCanvas.remove();
-    }
-
-    // नया कैनवस बनाना
+    if (oldCanvas) { if(monthlyChart) monthlyChart.destroy(); oldCanvas.remove(); }
     const newCanvas = document.createElement('canvas');
     newCanvas.id = 'monthChart'; 
     chartBox.appendChild(newCanvas);
-
     monthlyChart=new Chart(newCanvas,{
         type:"bar",
-        data:{labels,datasets:[{label:"Monthly Calls",data:values,backgroundColor:"#2196F3"}]},
-        options:{
-            responsive:true, 
-            maintainAspectRatio: true, 
-            aspectRatio: 1, 
-            plugins:{legend:{display:false}},
-            // ** एनिमेशन सेटिंग्स **
-            animation: { 
-                duration: 1000, 
-                easing: 'easeOutQuart'
-            }
-        }
+        data:{labels,datasets:[{label:"Calls",data:values,backgroundColor:"#2196F3"}]},
+        options:{ responsive:true, plugins:{legend:{display:false}}, animation: { duration: 1000 } }
     });
 }
 
-// --- OTHER UTILITY FUNCTIONS ---
 function updateStats(d){
     document.getElementById("totalCalls").innerText=d.length;
     document.getElementById("missedCalls").innerText=d.filter(x=>x.type==="missed").length;
@@ -708,59 +488,17 @@ function updateStats(d){
     document.getElementById("todayCalls").innerText=d.filter(x=>x.date.includes(today)).length;
 }
 
-// --- EXPORT TO CSV FUNCTION ---
 document.getElementById("exportBtn").onclick = () => {
     const data = filteredData; 
-    if (data.length === 0) {
-        alert("No data to export.");
-        return;
-    }
-
-    const headers = ["Number", "Name", "Type", "Duration", "Date"];
-    const rows = [headers.join(',')];
-
-    data.forEach(item => {
-        const row = [
-            item.number,
-            item.name,
-            item.type,
-            item.duration,
-            formatDateForTable(item.date) 
-        ].map(d => `"${d}"`).join(','); 
-
-        rows.push(row);
-    });
-
-    const csvContent = rows.join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    if (link.download !== undefined) { 
-        const url = URL.createObjectURL(blob);
-        link.setAttribute("href", url);
-        link.setAttribute("download", "call_logs_export_" + new Date().toISOString().slice(0, 10) + ".csv");
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    } else {
-        alert("Your browser does not support CSV download.");
-    }
+    if (data.length === 0) return alert("No data to export.");
+    let csv = "Number,Name,Type,Duration,Date\n" + data.map(item => `"${item.number}","${item.name}","${item.type}","${item.duration}","${formatDateForTable(item.date)}"`).join("\n");
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "call_logs.csv"; a.click();
 };
 
-
-// LIVE WEBHOOK (Retained for real-time updates)
-try{
-    const stream=new EventSource("https://your-proxy-endpoint/webhook");
-    stream.onmessage=e=>pushWebhook(JSON.parse(e.data));
-}catch(err){console.log("Webhook unavailable",err);}
-async function pushWebhook(data){
-    allData.push(data);
-    applyFilters(); 
-}
-
-// Initial setup to display Call Logs on load (MODIFIED)
 document.addEventListener('DOMContentLoaded', () => {
-    // यह सुनिश्चित करता है कि Call Logs डिफ़ॉल्ट रूप से सक्रिय रहे
     document.querySelector('.menu-item[data-section="calls"]').click(); 
 });
 </script>
